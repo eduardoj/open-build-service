@@ -1084,28 +1084,6 @@ class Webui::PackageController < Webui::WebuiController
     end
   end
 
-  def require_package
-    required_parameters :package
-    params[:rev], params[:package] = params[:pkgrev].split('-', 2) if params[:pkgrev]
-    @project ||= params[:project]
-    unless params[:package].blank?
-      begin
-        @package = Package.get_by_project_and_name( @project.to_param, params[:package],
-                                                    {use_source: false, follow_project_links: true, follow_multibuild: true} )
-      rescue APIException # why it's not found is of no concern :)
-      end
-    end
-
-    return if @package
-
-    if request.xhr?
-      render nothing: true, status: :not_found
-    else
-      flash[:error] = "Package \"#{params[:package]}\" not found in project \"#{params[:project]}\""
-      redirect_to project_show_path(project: @project, nextstatus: 404)
-    end
-  end
-
   def users_path
     url_for(action: :users, project: @project, package: @package)
   end
