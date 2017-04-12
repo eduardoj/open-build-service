@@ -16,4 +16,12 @@ RSpec.describe Kiwi::Image, type: :model do
       expect(subject.repositories[1].repo_type).to eq('rpm-md')
     end
   end
+
+  describe '#to_xml' do
+    subject { Kiwi::Image.create_from_xml(kiwi_xml) }
+
+    it 'exports the kiwi image to an xml string' do
+      is_expected.to be_a String
+    end
+  end
 end

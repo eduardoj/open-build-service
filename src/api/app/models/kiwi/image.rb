@@ -38,6 +38,15 @@ class Kiwi::Image < ApplicationRecord
     new_image
   end
 
+  def to_xml
+    hash = {
+      name: name,
+      repository: repositories.map { |repo|
+        { type: repo.repo_type, source: { path: repo.source_path } }
+      }
+    }
+    Xmlhash::XMLHash.new(hash).to_xml
+  end
 end
 
 # == Schema Information
