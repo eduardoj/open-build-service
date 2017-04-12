@@ -1,0 +1,9 @@
+%h2
+  Add Repository to kiwi image
+  = form_tag(controller: 'webui/kiwi_images/repositories', action: :create, project: @project, package: @package) do
+    %p
+      %strong Repository Name:
+      %br/
+      = text_field_tag 'repository_name', ''
+    %p
+      = submit_tag 'Add Repo'
