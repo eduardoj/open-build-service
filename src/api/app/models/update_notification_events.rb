@@ -31,8 +31,8 @@ class UpdateNotificationEvents
       if Rails.env.test?
         # make debug output useful in test suite, not just showing backtrace to HoptoaddNotifier
         Rails.logger.error "ERROR: #{e.inspect}: #{e.backtrace}"
-        logger.info e.inspect
-        logger.info o e.backtrace
+        Rails.logger.info e.inspect
+        Rails.logger.info e.backtrace
       end
       HoptoadNotifier.notify(e, {failed_job: type.inspect})
       return
@@ -57,7 +57,7 @@ class UpdateNotificationEvents
         nr = 1 if nr.zero?
 
         begin
-          @last = Xmlhash.parse(Suse::Backend.get("/lastnotifications?start=#{nr}&block=1").body)
+          @last = Xmlhash.parse(Backend::Connection.get("/lastnotifications?start=#{nr}&block=1").body)
         rescue Net::ReadTimeout, EOFError, ActiveXML::Transport::Error
           return
         end

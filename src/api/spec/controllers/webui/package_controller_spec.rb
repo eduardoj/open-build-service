@@ -69,6 +69,26 @@ RSpec.describe Webui::PackageController, vcr: true do
       it_should_behave_like "a response of a successful submit request"
     end
 
+    context 'sending a submit request for an older submission' do
+      before do
+        3.times { |i| Backend::Connection.put("/source/#{source_project}/#{package}/somefile.txt", i.to_s) }
+        post :submit_request, params: { project: source_project, package: package, targetproject: target_project, rev: 2 }
+      end
+
+      it_should_behave_like "a response of a successful submit request"
+
+      it 'creates a submit request for the correct revision' do
+        expect(BsRequestActionSubmit.where(
+                 source_project: source_project.name,
+                 source_package: package.name,
+                 target_project: target_project.name,
+                 target_package: package.name,
+                 type:           'submit',
+                 source_rev:     2
+        )).to exist
+      end
+    end
+
     context 'not successful' do
       before do
         post :submit_request, params: { project: source_project, package: source_package, targetproject: target_project.name }
@@ -518,7 +538,7 @@ EOT
         let(:package_with_commits) { create(:package_with_file, name: "package_with_commits", project: source_project) }
 
         before do
-          19.times { |i| Suse::Backend.put("/source/#{source_project}/#{package_with_commits}/somefile.txt", i.to_s) }
+          19.times { |i| Backend::Connection.put("/source/#{source_project}/#{package_with_commits}/somefile.txt", i.to_s) }
           get :revisions, params: { project: source_project, package: package_with_commits }
         end
 
@@ -535,7 +555,7 @@ EOT
         let(:package_with_more_commits) { create(:package_with_file, name: "package_with_more_commits", project: source_project) }
 
         before do
-          20.times { |i| Suse::Backend.put("/source/#{source_project}/#{package_with_more_commits}/somefile.txt", i.to_s) }
+          20.times { |i| Backend::Connection.put("/source/#{source_project}/#{package_with_more_commits}/somefile.txt", i.to_s) }
           get :revisions, params: { project: source_project, package: package_with_more_commits }
         end
 
@@ -685,18 +705,26 @@ EOT
     let(:source_project_with_plus) { create(:project, name: 'foo++bar') }
     let(:package_of_project_with_plus) { create(:package, name: 'some_package', project: source_project_with_plus) }
     let(:source_package_with_plus) { create(:package, name: 'my_package++special', project: source_project) }
+    let(:repo_leap_42_2) { create(:repository, name: 'leap_42.2', project: source_project, architectures: ['i586']) }
+
     RSpec.shared_examples "build log" do
+      before do
+        login user
+        repo_leap_42_2
+        source_project.store
+      end
+
       context "successfully" do
         before do
           path = "#{CONFIG['source_url']}/build/#{user.home_project}/_result?view=status" \
-                 "&package=#{source_package}&arch=i586&repository=10.2"
+                 "&package=#{source_package}&arch=i586&repository=#{repo_leap_42_2}"
           stub_request(:get, path).and_return(body:
             %(<resultlist state='123'>
-               <result project='#{user.home_project.name}' repository='10.2' arch='i586'>
+               <result project='#{user.home_project}' repository='#{repo_leap_42_2}' arch='i586'>
                  <binarylist/>
                </result>
               </resultlist>))
-          do_request project: source_project, package: source_package, repository: '10.2', arch: 'i586', format: 'js'
+          do_request project: source_project, package: source_package, repository: repo_leap_42_2.name, arch: 'i586', format: 'js'
         end
 
         it { expect(response).to have_http_status(:ok) }
@@ -705,30 +733,36 @@ EOT
       context "successfully with a package which name that includes '+'" do
         before do
           path = "#{CONFIG['source_url']}/build/#{user.home_project}/_result?view=status" \
-                 "&package=#{source_package_with_plus}&arch=i586&repository=10.2"
+                 "&package=#{source_package_with_plus}&arch=i586&repository=#{repo_leap_42_2}"
           stub_request(:get, path).and_return(body:
             %(<resultlist state='123'>
-               <result project='#{user.home_project.name}' repository='10.2' arch='i586'>
+               <result project='#{user.home_project}' repository='#{repo_leap_42_2}' arch='i586'>
                  <binarylist/>
                </result>
               </resultlist>))
-          do_request project: source_project, package: source_package_with_plus, repository: '10.2', arch: 'i586', format: 'js'
+          do_request project: source_project, package: source_package_with_plus, repository: repo_leap_42_2.name, arch: 'i586', format: 'js'
         end
 
         it { expect(response).to have_http_status(:ok) }
       end
 
       context "successfully with a project which name that includes '+'" do
+        let(:repo_leap_45_1) { create(:repository, name: 'leap_45.1', project: source_project_with_plus, architectures: ['i586']) }
+
         before do
+          repo_leap_45_1
+          source_project_with_plus.store
+
           path = "#{CONFIG['source_url']}/build/#{source_project_with_plus}/_result?view=status" \
-                 "&package=#{package_of_project_with_plus}&arch=i586&repository=10.2"
+                 "&package=#{package_of_project_with_plus}&arch=i586&repository=#{repo_leap_45_1}"
           stub_request(:get, path).and_return(body:
             %(<resultlist state='123'>
-               <result project='#{source_project_with_plus.name}' repository='10.2' arch='i586'>
+               <result project='#{source_project_with_plus}' repository='#{repo_leap_45_1}' arch='i586'>
                  <binarylist/>
                </result>
               </resultlist>))
-          do_request project: source_project_with_plus, package: package_of_project_with_plus, repository: '10.2', arch: 'i586', format: 'js'
+          do_request project: source_project_with_plus, package: package_of_project_with_plus,
+            repository: repo_leap_45_1.name, arch: 'i586', format: 'js'
         end
 
         it { expect(response).to have_http_status(:ok) }
@@ -738,7 +772,7 @@ EOT
         let!(:flag) { create(:sourceaccess_flag, project: source_project) }
 
         before do
-          do_request project: source_project, package: source_package, repository: '10.2', arch: 'i586', format: 'js'
+          do_request project: source_project, package: source_package, repository: repo_leap_42_2.name, arch: 'i586', format: 'js'
         end
 
         it { expect(flash[:error]).to eq('Could not access build log') }
@@ -747,7 +781,7 @@ EOT
 
       context "with a non existant package" do
         before do
-          do_request project: source_project, package: 'nonexistant', repository: '10.2', arch: 'i586'
+          do_request project: source_project, package: 'nonexistant', repository: repo_leap_42_2.name, arch: 'i586'
         end
 
         it { expect(flash[:error]).to eq("Couldn't find package 'nonexistant' in project '#{source_project}'. Are you sure it exists?") }
@@ -756,7 +790,7 @@ EOT
 
       context "with a non existant project" do
         before do
-          do_request project: 'home:foo', package: 'nonexistant', repository: '10.2', arch: 'i586'
+          do_request project: 'home:foo', package: 'nonexistant', repository: repo_leap_42_2.name, arch: 'i586'
         end
 
         it { expect(flash[:error]).to eq("Couldn't find project 'home:foo'. Are you sure it still exists?") }
@@ -770,6 +804,24 @@ EOT
       end
 
       it_should_behave_like "build log"
+
+      context "with a nonexistant repository" do
+        before do
+          do_request project: source_project, package: source_package, repository: 'nonrepository', arch: 'i586'
+        end
+
+        it { expect(flash[:error]).not_to be_nil }
+        it { expect(response).to redirect_to(package_show_path(source_project, source_package)) }
+      end
+
+      context "with a nonexistant architecture" do
+        before do
+          do_request project: source_project, package: source_package, repository: repo_leap_42_2.name, arch: 'i566'
+        end
+
+        it { expect(flash[:error]).not_to be_nil }
+        it { expect(response).to redirect_to(package_show_path(source_project, source_package)) }
+      end
     end
 
     describe "GET #update_build_log" do
@@ -778,6 +830,44 @@ EOT
       end
 
       it_should_behave_like "build log"
+
+      context "with a nonexistant repository" do
+        before do
+          do_request project: source_project, package: source_package, repository: 'nonrepository', arch: 'i586'
+        end
+
+        it { expect(assigns(:errors)).not_to be_nil }
+        it { expect(response).to have_http_status(:ok) }
+      end
+
+      context "with a nonexistant architecture" do
+        before do
+          do_request project: source_project, package: source_package, repository: repo_leap_42_2.name, arch: 'i566'
+        end
+
+        it { expect(assigns(:errors)).not_to be_nil }
+        it { expect(response).to have_http_status(:ok) }
+      end
+    end
+  end
+
+  describe 'DELETE #trigger_rebuild' do
+    before do
+      login(user)
+      delete :trigger_rebuild, params: { project: source_project, package: source_package }
+    end
+
+    it 'lets the user know there was an error' do
+      expect(flash[:error]).to_not be_empty
+    end
+
+    it 'redirects to the package binaries path' do
+      expect(response).to redirect_to(
+        controller: :package,
+        action: :binaries,
+        project: source_project,
+        package: source_package
+      )
     end
   end
 end

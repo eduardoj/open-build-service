@@ -58,6 +58,10 @@ gem 'mousetrap-rails'
 gem 'xmlrpc'
 # Multiple feature switch
 gem 'feature'
+# for profiling
+gem 'peek'
+gem 'peek-dalli'
+gem 'peek-mysql2'
 
 group :development, :production do
   # to have the delayed job daemon
@@ -70,6 +74,8 @@ group :development, :production do
   gem 'clockwork', '>= 0.7'
   # as interface to LDAP
   gem 'ruby-ldap', require: false
+  # to enable GSSAPI / Kerberos authentication
+  gem "gssapi", require: false
 end
 
 group :production do
@@ -136,6 +142,8 @@ group :development, :test do
   gem 'pry', '>= 0.9.12'
   # for style checks
   gem 'rubocop', require: false
+  # integrates with RuboCop to analyse HAML files
+  gem 'haml_lint', '~> 0.24.0'
   # to generate random long strings
   gem 'faker'
   # as driver for capybara

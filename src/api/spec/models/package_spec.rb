@@ -210,7 +210,8 @@ RSpec.describe Package, vcr: true do
   context '#has_icon?' do
     it 'returns true if the icon exist' do
       if CONFIG['global_write_through']
-        Suse::Backend.put("/source/#{CGI.escape(package_with_file.project.name)}/#{CGI.escape(package_with_file.name)}/_icon", Faker::Lorem.paragraph)
+        Backend::Connection.put("/source/#{CGI.escape(package_with_file.project.name)}/#{CGI.escape(package_with_file.name)}/_icon",
+                                Faker::Lorem.paragraph)
       end
       expect(package_with_file.has_icon?).to eq(true)
     end
@@ -420,12 +421,31 @@ RSpec.describe Package, vcr: true do
 
     context 'with invalid repository or architecture' do
       before do
-        allow(Suse::Backend).to receive(:get).and_raise(ActiveXML::Transport::NotFoundError.new('message'))
+        allow(Backend::Connection).to receive(:get).and_raise(ActiveXML::Transport::NotFoundError.new('message'))
       end
 
       it 'returns an empty array' do
         expect(result).to eq([])
       end
+    end
+  end
+
+  describe '#backend_build_command' do
+    let(:params) { ActionController::Parameters.new(arch: 'x86') }
+    let(:backend_url) { "#{CONFIG['source_url']}/build/#{package.project.name}?cmd=rebuild&arch=x86" }
+
+    subject { package.backend_build_command(:rebuild, params) }
+
+    context 'backend response is successful' do
+      before { stub_request(:post, backend_url) }
+
+      it { is_expected.to be_truthy }
+    end
+
+    context 'backend response fails' do
+      before { stub_request(:post, backend_url).and_raise(ActiveXML::Transport::Error) }
+
+      it { is_expected.to be_falsey }
     end
   end
 end

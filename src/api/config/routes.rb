@@ -25,6 +25,8 @@ class APIMatcher
 end
 
 OBSApi::Application.routes.draw do
+  mount Peek::Railtie => '/peek'
+
   cons = {
     arch:       %r{[^\/]*},
     binary:     %r{[^\/]*},
@@ -123,7 +125,7 @@ OBSApi::Application.routes.draw do
       post 'package/save_group/:project/:package' => :save_group, constraints: cons
       post 'package/remove_role/:project/:package' => :remove_role, constraints: cons
       get 'package/view_file/(:project/(:package/(:filename)))' => :view_file, constraints: cons, as: 'package_view_file', defaults: {format: "html"}
-      get 'package/live_build_log/(:project/(:package/(:repository/(:arch))))' => :live_build_log, constraints: cons, as: 'package_live_build_log'
+      get 'package/live_build_log/:project/:package/:repository/:arch' => :live_build_log, constraints: cons, as: 'package_live_build_log'
       get 'package/update_build_log/:project/:package' => :update_build_log, constraints: cons
       get 'package/abort_build/:project/:package' => :abort_build, constraints: cons
       delete 'package/trigger_rebuild/:project/:package' => :trigger_rebuild, constraints: cons
@@ -172,6 +174,11 @@ OBSApi::Application.routes.draw do
       put 'flag/:project(/:package)' => :toggle_flag, constraints: cons
       post 'flag/:project(/:package)' => :create_flag, constraints: cons
       delete 'flag/:project(/:package)/:flag' => :remove_flag, constraints: cons
+    end
+    
+    controller 'webui/kiwi_images/repositories' do
+      get 'kiwi_images/:project/:package/repositories/new' => :new, constraints: cons
+      post 'kiwi_images/:project/:package/repositories' => :create, constraints: cons
     end
 
     controller 'webui/project' do
@@ -351,7 +358,9 @@ OBSApi::Application.routes.draw do
   match 'build/:project/:repository/:arch/:package/_buildinfo' => 'build#buildinfo', constraints: cons, via: [:get, :post]
   match 'build/:project/:repository/:arch/:package/_status' => 'build#index', constraints: cons, via: [:get, :post]
   match 'build/:project/:repository/:arch/:package/_history' => 'build#index', constraints: cons, via: [:get, :post]
-  match 'build/:project/:repository/:arch/:package/:filename' => 'build#file', via: [:get, :put, :delete], constraints: cons
+  get 'build/:project/:repository/:arch/:package/:filename' => 'build/file#show', constraints: cons
+  put 'build/:project/:repository/:arch/:package/:filename' => 'build/file#update', constraints: cons
+  delete 'build/:project/:repository/:arch/:package/:filename' => 'build/file#destroy', constraints: cons
   match 'build/:project/:repository/:arch/_builddepinfo' => 'build#builddepinfo', via: [:get, :post], constraints: cons
   match 'build/:project/:repository/_buildconfig' => 'build#index', constraints: cons, via: [:get, :post]
   match 'build/:project/:repository/:arch(/:package)' => 'build#index', constraints: cons, via: [:get, :post]
@@ -507,8 +516,6 @@ OBSApi::Application.routes.draw do
 
       get 'statistics' => :index
       get 'statistics/highest_rated' => :highest_rated
-      get 'statistics/download_counter' => :download_counter
-      get 'statistics/newest_stats' => :newest_stats
       get 'statistics/most_active_projects' => :most_active_projects
       get 'statistics/most_active_packages' => :most_active_packages
       get 'statistics/latest_added' => :latest_added
@@ -517,7 +524,9 @@ OBSApi::Application.routes.draw do
       get 'statistics/latest_built' => :latest_built
 
       get 'statistics/active_request_creators/:project' => :active_request_creators, constraints: cons
-      get 'statistics/maintenance_statistics/:project' => 'statistics/maintenance_statistics#index', constraints: cons
+      get 'statistics/maintenance_statistics/:project' => 'statistics/maintenance_statistics#index', constraints: cons,
+        as: 'maintenance_statistics'
+      get 'public/statistics/maintenance_statistics/:project' => 'statistics/maintenance_statistics#index', constraints: cons
     end
 
     ### /status_message
@@ -590,7 +599,6 @@ OBSApi::Application.routes.draw do
 
       match 'search/repository/id' => :repository_id, via: [:get, :post]
       match 'search/issue' => :issue, via: [:get, :post]
-      match 'search/attribute' => :attribute, via: [:get, :post]
     end
 
     ### /request

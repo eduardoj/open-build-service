@@ -52,7 +52,7 @@ class AttributeController < ApplicationController
 
     # namespace definitions must be managed by the admin
     return unless extract_user
-    unless @http_user.is_admin?
+    unless User.current.is_admin?
       render_error status: 403, errorcode: 'permissions denied',
         message: "Namespace changes are only permitted by the administrator"
       return
@@ -186,7 +186,7 @@ class AttributeController < ApplicationController
       # old or remote instance entry
       path = "/source/#{URI.escape(params[:project])}/#{URI.escape(params[:package] || '_project')}/_attribute?meta=1"
       path += "&rev=#{CGI.escape(params[:rev])}" if params[:rev]
-      answer = Suse::Backend.get(path)
+      answer = Backend::Connection.get(path)
       render xml: answer.body.to_s
       return
     end
