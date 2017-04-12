@@ -26,7 +26,6 @@ class Kiwi::Repository < ApplicationRecord
   #### Instance methods (public and then protected/private)
 
   #### Alias of methods
-
 end
 
 # == Schema Information

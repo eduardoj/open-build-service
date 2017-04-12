@@ -27,6 +27,17 @@ class Kiwi::Image < ApplicationRecord
 
   #### Alias of methods
 
+  def self.create_from_xml(xml_string)
+    xml = Xmlhash.parse(xml_string)
+    new_image = create(name: xml['name'])
+
+    xml["repository"].each do |repository|
+      new_image.repositories.create(repo_type: repository['type'], source_path: repository['source']['path'])
+    end
+
+    new_image
+  end
+
 end
 
 # == Schema Information
