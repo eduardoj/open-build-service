@@ -26,7 +26,24 @@ class Kiwi::Image < ApplicationRecord
   #### Instance methods (public and then protected/private)
 
   #### Alias of methods
+  def self.create_from_xml(xml_string)
+    xml = Xmlhash.parse(xml_string)
+    new_image = create(name: xml['name'])
+    xml["repository"].each do |repository|
+      new_image.repositories.create(repo_type: repository['type'], source_path: repository['source']['path'])
+    end
+    new_image
+  end
 
+  def to_xml
+    hash = {
+      name: name,
+      repository: repositories.map { |repo|
+        { type: repo.repo_type, source: { path: repo.source_path } }
+      }
+    }
+    Xmlhash::XMLHash.new(hash).to_xml
+  end
 end
 
 # == Schema Information
