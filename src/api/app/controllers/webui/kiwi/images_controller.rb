@@ -1,6 +1,8 @@
 module Webui
   module Kiwi
-    class ImagesController < Webui::WebuiController
+    class ImagesController < WebuiController
+      before_action :set_image, except: [:import_from_package]
+
       def import_from_package
         package = Package.find(params[:package_id])
 
@@ -23,6 +25,17 @@ module Webui
         end
 
         redirect_to kiwi_image_repositories_path(package.kiwi_image)
+      end
+
+      def show
+        render json: { is_outdated: @image.package.kiwi_image_outdated? }
+      end
+
+      private
+
+      def set_image
+        required_parameters :id
+        load_kiwi_image(params[:id])
       end
     end
   end
