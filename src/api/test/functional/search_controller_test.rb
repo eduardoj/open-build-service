@@ -414,6 +414,10 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   def test_find_owner
     login_king
 
+    # got introduced in the fixtures meanwhile
+    delete '/source/Apache/_attribute/OBS:OwnerRootProject'
+    assert_response :success
+
     get '/search/owner'
     assert_response 400
     assert_xml_tag tag: 'status', attributes: { code: 'no_binary' }
@@ -422,8 +426,8 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     run_publisher
 
     get "/search/owner?binary='package'"
-    assert_response 400
-    assert_xml_tag tag: 'status', attributes: { code: '400', origin: 'backend' }
+    assert_response 404
+    assert_xml_tag tag: 'status', attributes: { code: 'unknown_project' }
 
     get "/search/owner?binary='package'&attribute='OBS:does_not_exist'"
     assert_response 404
@@ -697,6 +701,9 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     delete '/source/TEMPORARY'
     assert_response :success
     delete '/source/home:Iggy/_attribute/OBS:OwnerRootProject'
+    assert_response :success
+    # restore fixture
+    post '/source/Apache/_attribute', params: "<attributes><attribute namespace='OBS' name='OwnerRootProject' /></attributes>"
     assert_response :success
   end
 
