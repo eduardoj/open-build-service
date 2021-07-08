@@ -16,5 +16,5 @@ find $DIRECTORIES \
   -type f -exec sh -c "head -n 1 {} | grep -Eq '^#!(.*/|.*env +)(sh|bash)'" \; -print |
   while IFS="" read -r file
   do
-    shellcheck "$file"
+    shellcheck -x "$file"
   done
