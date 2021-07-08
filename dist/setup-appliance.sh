@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Shellcheck used: 0.6.0
+# shellcheck disable=2016 # False positives found in sed commands
+# shellcheck disable=2181 # TODO: Lots of ocurrences
+
 ###############################################################################
 #
 # DEFINITION OF FUNCTIIONS
@@ -83,7 +87,7 @@ function create_selfsigned_certificate() {
   for name in $PROPOSED_DNS_NAMES;do
     DNS_NAMES="$DNS_NAMES
 DNS.$COUNTER = $name"
-    COUNTER=$(($COUNTER + 1 ))
+    COUNTER=$(( COUNTER + 1 ))
   done
 
   logline "Creating crt/key in $cert_outdir"
@@ -137,19 +141,14 @@ subjectAltName = @alt_names
 }
 ###############################################################################
 function get_hostname {
-
-  if [[ $1 && $BOOTSTRAP_TEST_MODE == 1 ]];then
-    FQHOSTNAME=$1
-  else
-    TIMEOUT=30
-    while [ -z "$FQHOSTNAME" -o "$FQHOSTNAME" = "localhost" ];do
-      FQHOSTNAME=`hostname -f 2>/dev/null`
-      TIMEOUT=$(($TIMEOUT-1))
-      [ "$TIMEOUT" -le 0 ] && break
-      echo "Waiting for FQHOSTNAME ($TIMEOUT)"
-      sleep 1
-    done
-  fi
+  TIMEOUT=30
+  while [ -z "$FQHOSTNAME" ] || [ "$FQHOSTNAME" = "localhost" ];do
+    FQHOSTNAME=$(hostname -f 2>/dev/null)
+    TIMEOUT=$((TIMEOUT - 1))
+    [ "$TIMEOUT" -le 0 ] && break
+    echo "Waiting for FQHOSTNAME ($TIMEOUT)"
+    sleep 1
+  done
 
   if type -p ec2-public-hostname; then
     FQHOSTNAME=$(ec2-public-hostname)
@@ -166,7 +165,7 @@ function get_hostname {
     DEFAULT_ROUTE_INTERFACE=$(LANG=C ip route show|perl  -e '$_=<>; ( m/^default via.*dev\s+([\w]+)\s.*/ ) && print $1')
     # Fallback to IP of the VM/host
     FQHOSTNAME=$(LANG=C ip addr show "$DEFAULT_ROUTE_INTERFACE"| perl -lne '( m#^\s+inet\s+([0-9\.]+)(/\d+)?\s+.*# ) && print $1' | grep -v ^127. | head -n 1)
-    if [ "$?" != "0" -o "$FQHOSTNAME" = "" ]; then
+    if [ "$?" != "0" ] || [ "$FQHOSTNAME" = "" ]; then
       echo "    Can't determine hostname or IP - Network setup failed!"
       echo "    Check if networking is up and dhcp is working!"
       echo "    Using 'localhost' as FQHOSTNAME."
@@ -176,9 +175,7 @@ function get_hostname {
   fi
 
   if [[ -z $USEIP  ]];then
-    DOMAINNAME=""
-    if [[ $FQHOSTNAME =~ '.' ]];then
-      DOMAINNAME=$(echo $FQHOSTNAME | perl -pe 's/^[\w\-_]*\.(.*)/$1/')
+    if [[ $FQHOSTNAME =~ . ]];then
       SHORTHOSTNAME=$(echo $FQHOSTNAME | perl -pe 's/^([\w\-_]*)\..*/$1/')
     else
       SHORTHOSTNAME=$FQHOSTNAME
@@ -240,7 +237,7 @@ function prepare_database_setup {
   cd "$apidir" || exit 1
   RAILS_ENV=production bin/rails db:migrate:status > /dev/null
 
-  if [[ $? > 0 ]];then
+  if [[ $? -gt 0 ]];then
     echo "Initialize MySQL databases (first time only)"
     DATADIR_FILE=$(grep datadir -rl /etc/my.cnf*)
     echo " - reconfiguring datadir in $DATADIR_FILE"
@@ -264,7 +261,7 @@ function prepare_database_setup {
     systemctl restart "$MYSQL_SERVICE"
     echo " - setting new password for user root in mysql"
     mysqladmin -u "$MYSQL_USER" password "$MYSQL_PASS"
-    if [[ $? > 0 ]];then
+    if [[ $? -gt 0 ]];then
       echo "ERROR: Your mysql setup doesn't fit your rails setup"
       echo "Please check your database settings for mysql and rails"
       exit 1
@@ -293,7 +290,7 @@ function prepare_database_setup {
   do
     logline " - Doing 'rails $cmd'"
     RAILS_ENV=production SAFETY_ASSURED=1 bin/rails $cmd >> "$apidir"/log/db_migrate.log 2>&1
-    if [[ $? > 0 ]];then
+    if [[ $? -gt 0 ]];then
       (>&2 echo "Command $cmd FAILED")
       exit 1
     fi
@@ -436,7 +433,7 @@ function ask {
   fi
 
   echo "Default: $2"
-  read rv
+  read -r rv
 
   if [[ ! $rv ]];then
     rv=$2
@@ -581,14 +578,16 @@ EOF
     if [ -e "$backenddir"/obs-default-gpg.asc ] && ! grep -q "^user" /etc/sign.conf; then
       logline "Configuring /etc/sign.conf"
       # extend signd config
-      echo "user: defaultkey@localobs"   >> /etc/sign.conf
-      echo "server: 127.0.0.1"           >> /etc/sign.conf
-      echo "allowuser: obsrun"           >> /etc/sign.conf
-      echo "allow: 127.0.0.1"            >> /etc/sign.conf
-      echo "phrases: $backenddir/gnupg/phrases" >> /etc/sign.conf
-      echo done
+      {
+        echo 'user: defaultkey@localobs'
+        echo 'server: 127.0.0.1'
+        echo 'allowuser: obsrun'
+        echo 'allow: 127.0.0.1'
+        echo "phrases: $backenddir/gnupg/phrases"
+      } >> /etc/sign.conf
+      echo 'done'
       rm /tmp/obs-gpg.$$
-      sed -i 's,^# \(our $sign =.*\),\1,' /usr/lib/obs/server/BSConfig.pm
+      sed -i 's/^# \(our $sign =.*\)/\1/' /usr/lib/obs/server/BSConfig.pm
       # ensure that $OBS_SIGND gets restarted if already started
       systemctl is-enabled "$OBS_SIGND" >/dev/null 2>&1
       if [ $? -eq 0 ] ; then
@@ -597,7 +596,7 @@ EOF
       fi
     fi
     if [ ! -e "$backenddir"/obs-default-gpg.asc ] ; then
-        sed -i 's,^\(our $sign =.*\),# \1,' /usr/lib/obs/server/BSConfig.pm
+        sed -i 's/^\(our $sign =.*\)/# \1/' /usr/lib/obs/server/BSConfig.pm
         ENABLE_FORCEPROJECTKEYS=0
     fi
 
@@ -616,7 +615,6 @@ function prepare_os_settings {
         HTTPD_SERVICE=apache2
         HTTPD_USER=wwwrun
         HTTPD_GROUP=www
-        PASSENGER_CONF=/etc/$HTTPD_SERVICE/conf.d/mod_passenger.conf
         TRUST_ANCHORS_DIR=/usr/share/pki/trust/anchors
         UPDATE_SSL_TRUST_BIN=update-ca-certificates
         MOD_PASSENGER_CONF=/etc/$HTTPD_SERVICE/conf.d/mod_passenger.conf
@@ -631,7 +629,6 @@ function prepare_os_settings {
         HTTPD_SERVICE=httpd
         HTTPD_USER=apache
         HTTPD_GROUP=apache
-        PASSENGER_CONF=/etc/$HTTPD_SERVICE/conf.d/passenger.conf
         TRUST_ANCHORS_DIR=/etc/pki/ca-trust/source/anchors
         UPDATE_SSL_TRUST_BIN=update-ca-trust
         MOD_PASSENGER_CONF=/etc/$HTTPD_SERVICE/conf.d/passenger.conf
@@ -694,6 +691,7 @@ MYSQL_PASS=opensuse
 
 # package or appliance defaults
 if [ -e /etc/sysconfig/obs-server ]; then
+  # shellcheck disable=1091
   source /etc/sysconfig/obs-server
 fi
 
