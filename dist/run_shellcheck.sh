@@ -12,6 +12,7 @@ DIRECTORIES=$(printf "../%s " "${DIRECTORIES_ARRAY[@]}")
 find $DIRECTORIES \
   -name run_shellcheck.sh \
     -o -name 0000-check_users_and_group.ts \
+    -o -name setup-appliance.sh \
   -type f -exec sh -c "head -n 1 {} | grep -Eq '^#!(.*/|.*env +)(sh|bash)'" \; -print |
   while IFS="" read -r file
   do
