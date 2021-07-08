@@ -6,13 +6,13 @@
 #
 ###############################################################################
 function execute_silently {
-  $@ > /dev/null 2>&1
+  "$@" > /dev/null 2>&1
   return $?
 }
 ###############################################################################
 function logline {
   [[ $BOOTSTRAP_TEST_MODE == 1 ]] && return
-  echo $@
+  echo "$@"
 }
 ###############################################################################
 function check_unit {
@@ -22,19 +22,19 @@ function check_unit {
   [[ $SETUP_ONLY == 1 ]] && return
 
   echo "Checking unit $srv ..."
-  IS_ENABLED=`systemctl is-enabled $srv`
+  IS_ENABLED=$(systemctl is-enabled "$srv")
   if [ "$IS_ENABLED" != "enabled" ];then
     logline "Enabling $srv"
-    execute_silently systemctl enable --now $srv
+    execute_silently systemctl enable --now "$srv"
   fi
   if [[ $? -gt 0 ]];then
     logline "WARNING: Enabling $srv daemon failed."
   fi
 
-  STATUS=`systemctl is-active $srv 2>/dev/null`
+  STATUS=$(systemctl is-active "$srv" 2>/dev/null)
   if [[ "$STATUS" == "inactive" ]];then
     echo "$srv daemon not started. Trying to start"
-    execute_silently systemctl start $srv
+    execute_silently systemctl start "$srv"
     if [[ $? -gt 0 ]];then
       echo -n "Starting $srv daemon failed."
       if [[ $service_critical == 1 ]];then
@@ -49,24 +49,24 @@ function check_unit {
 function check_server_cert {
   # Create directory if not exists
   # Usefull on testing systems where no obs-server rpm is installed
-  [ -d $backenddir/certs/ ] || mkdir -p $backenddir/certs/
+  [ -d "$backenddir"/certs/ ] || mkdir -p "$backenddir"/certs/
   if [[ ! -e $backenddir/certs/server.${FQHOSTNAME}.created || ! -e $backenddir/certs/server.${FQHOSTNAME}.crt ]]; then
     # setup ssl certificates (NOT protected with a passphrase)
     logline "Creating a default SSL certificate for the server"
     logline "Please replace it with your version in $backenddir/certs directory..."
     DETECTED_CERT_CHANGE=1
     # hostname specific certs - survive intermediate hostname changes
-    if [ ! -e $backenddir/certs/server.${FQHOSTNAME}.crt ] ; then
+    if [ ! -e "$backenddir"/certs/server."$FQHOSTNAME".crt ] ; then
       # This is just a dummy SSL certificate, but it has a valid hostname.
       # Admin can replace it with his version.
       create_selfsigned_certificate
       echo "$OPENSSL_CONFIG" | openssl req -new -nodes -config /dev/stdin \
           -x509 -days 365 -batch \
-          -key $backenddir/certs/server.key \
-          -out $backenddir/certs/server.${FQHOSTNAME}.crt
+          -key "$backenddir"/certs/server.key \
+          -out "$backenddir"/certs/server."$FQHOSTNAME".crt
 
       if [[ $? == 0 ]];then
-        echo "Do not remove this file or new SSL CAs will get created." > $backenddir/certs/server.${FQHOSTNAME}.created
+        echo "Do not remove this file or new SSL CAs will get created." > "$backenddir"/certs/server."$FQHOSTNAME".created
       fi
     else
       echo "ERROR: SSL CAs in $backenddir/certs exists, but were not created for your hostname"
@@ -152,7 +152,7 @@ function get_hostname {
   fi
 
   if type -p ec2-public-hostname; then
-    FQHOSTNAME=`ec2-public-hostname`
+    FQHOSTNAME=$(ec2-public-hostname)
   fi
 
   if [ "$FQHOSTNAME" = "" ]; then
@@ -163,9 +163,9 @@ function get_hostname {
   # fallback in non-interative mode
   if [ "$FQHOSTNAME" = "" ]; then
     # Prefer interface with default route if exists
-    DEFAULT_ROUTE_INTERFACE=`LANG=C ip route show|perl  -e '$_=<>; ( m/^default via.*dev\s+([\w]+)\s.*/ ) && print $1'`
+    DEFAULT_ROUTE_INTERFACE=$(LANG=C ip route show|perl  -e '$_=<>; ( m/^default via.*dev\s+([\w]+)\s.*/ ) && print $1')
     # Fallback to IP of the VM/host
-    FQHOSTNAME=`LANG=C ip addr show $DEFAULT_ROUTE_INTERFACE| perl -lne '( m#^\s+inet\s+([0-9\.]+)(/\d+)?\s+.*# ) && print $1' | grep -v ^127. | head -n 1`
+    FQHOSTNAME=$(LANG=C ip addr show "$DEFAULT_ROUTE_INTERFACE"| perl -lne '( m#^\s+inet\s+([0-9\.]+)(/\d+)?\s+.*# ) && print $1' | grep -v ^127. | head -n 1)
     if [ "$?" != "0" -o "$FQHOSTNAME" = "" ]; then
       echo "    Can't determine hostname or IP - Network setup failed!"
       echo "    Check if networking is up and dhcp is working!"
@@ -195,7 +195,7 @@ function generate_proposed_dnsnames {
     LOCAL_HOST="localhost"
   fi
 
-  if [[ $FQHOSTNAME == $SHORTHOSTNAME ]];then
+  if [[ $FQHOSTNAME == "$SHORTHOSTNAME" ]];then
     DNSNAMES="$SHORTHOSTNAME $LOCAL_HOST"
   else
     DNSNAMES="$SHORTHOSTNAME $FQHOSTNAME $LOCAL_HOST"
@@ -211,12 +211,12 @@ function adjust_api_config {
       # use local host to avoid SSL verification between webui and api
 
       api_options_yml=$apidir/config/options.yml
-      sed -i 's,^frontend_host: .*,frontend_host: "localhost",' $api_options_yml
-      sed -i 's,^frontend_port: .*,frontend_port: 443,' $api_options_yml
-      sed -i 's,^frontend_protocol: .*,frontend_protocol: "'"https"'",' $api_options_yml
-      sed -i 's,^external_frontend_host: .*,frontend_host: "'"$FQHOSTNAME"'",' $api_options_yml
-      sed -i 's,^external_frontend_port: .*,frontend_port: 443,' $api_options_yml
-      sed -i 's,^external_frontend_protocol: .*,frontend_protocol: "'"https"'",' $api_options_yml
+      sed -i 's,^frontend_host: .*,frontend_host: "localhost",' "$api_options_yml"
+      sed -i 's,^frontend_port: .*,frontend_port: 443,' "$api_options_yml"
+      sed -i 's,^frontend_protocol: .*,frontend_protocol: "'"https"'",' "$api_options_yml"
+      sed -i 's,^external_frontend_host: .*,frontend_host: "'"$FQHOSTNAME"'",' "$api_options_yml"
+      sed -i 's,^external_frontend_port: .*,frontend_port: 443,' "$api_options_yml"
+      sed -i 's,^external_frontend_protocol: .*,frontend_protocol: "'"https"'",' "$api_options_yml"
 
 }
 ###############################################################################
@@ -224,27 +224,27 @@ function adapt_worker_jobs {
   #changed IP means also that leftover jobs are invalid - cope with that
   echo "Adapting present worker jobs"
   sed -i "s,server=\"http://[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:5352,server=\"http://$FQHOSTNAME:5352,g" \
-    $backenddir/jobs/*/* 2> /dev/null
+    "$backenddir"/jobs/*/* 2> /dev/null
   sed -i "s,server=\"http://[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:5252,server=\"http://$FQHOSTNAME:5252,g" \
-    $backenddir/jobs/*/* 2> /dev/null
+    "$backenddir"/jobs/*/* 2> /dev/null
   #remove old workers status and idling/building markers
-  rm -f $backenddir/jobs/*/*status 2> /dev/null
-  rm -f $backenddir/workers/*/* 2> /dev/null
+  rm -f "$backenddir"/jobs/*/*status 2> /dev/null
+  rm -f "$backenddir"/workers/*/* 2> /dev/null
   # create repo directory or apache fails when nothing got published
-  mkdir -p $backenddir/repos
-  chown obsrun.obsrun $backenddir/repos
+  mkdir -p "$backenddir"/repos
+  chown obsrun.obsrun "$backenddir"/repos
 }
 ###############################################################################
 function prepare_database_setup {
 
-  cd $apidir
+  cd "$apidir" || exit 1
   RAILS_ENV=production bin/rails db:migrate:status > /dev/null
 
   if [[ $? > 0 ]];then
     echo "Initialize MySQL databases (first time only)"
     DATADIR_FILE=$(grep datadir -rl /etc/my.cnf*)
     echo " - reconfiguring datadir in $DATADIR_FILE"
-    perl -p -i -e 's#.*datadir\s*=\s*/var/lib/mysql$#datadir= /srv/obs/MySQL#' $DATADIR_FILE
+    perl -p -i -e 's#.*datadir\s*=\s*/var/lib/mysql$#datadir= /srv/obs/MySQL#' "$DATADIR_FILE"
     echo " - installing to new datadir"
     mysql_install_db
     echo " - changing ownership for new datadir"
@@ -252,18 +252,18 @@ function prepare_database_setup {
     MYSQL_LOG=$(grep log-error /etc/my.cnf.d/*.cnf|perl -p -e 's/.*:log-error=(.*)/$1/')
     if [ -n "$MYSQL_LOG" ];then
       echo " - prepare log file $MYSQL_LOG"
-      LOG_DIR=`dirname $MYSQL_LOG`
-      if [ ! -d $LOG_DIR ];then
-        mkdir -p $LOG_DIR
-        chown mysql:mysql $LOG_DIR
+      LOG_DIR=$(dirname "$MYSQL_LOG")
+      if [ ! -d "$LOG_DIR" ];then
+        mkdir -p "$LOG_DIR"
+        chown mysql:mysql "$LOG_DIR"
       fi
-      touch $MYSQL_LOG
-      chown mysql:mysql $MYSQL_LOG
+      touch "$MYSQL_LOG"
+      chown mysql:mysql "$MYSQL_LOG"
     fi
     echo " - restarting mysql"
-    systemctl restart $MYSQL_SERVICE
+    systemctl restart "$MYSQL_SERVICE"
     echo " - setting new password for user root in mysql"
-    mysqladmin -u $MYSQL_USER password $MYSQL_PASS
+    mysqladmin -u "$MYSQL_USER" password "$MYSQL_PASS"
     if [[ $? > 0 ]];then
       echo "ERROR: Your mysql setup doesn't fit your rails setup"
       echo "Please check your database settings for mysql and rails"
@@ -276,23 +276,23 @@ function prepare_database_setup {
 
   if [ -n "$RUN_INITIAL_SETUP" ]; then
     logline "Initialize OBS api database (first time only)"
-    cd $apidir
+    cd "$apidir" || exit 1
     RAKE_COMMANDS="db:setup writeconfiguration data:schema:load"
   else
     logline "Migrate OBS api database"
-    cd $apidir
+    cd "$apidir" || exit 1
     RAKE_COMMANDS="db:migrate:with_data"
     echo
   fi
 
   logline "Setting ownership of '$backenddir' obsrun"
-  chown obsrun.obsrun $backenddir
+  chown obsrun.obsrun "$backenddir"
 
   logline "Setting up rails environment"
   for cmd in $RAKE_COMMANDS
   do
     logline " - Doing 'rails $cmd'"
-    RAILS_ENV=production SAFETY_ASSURED=1 bin/rails $cmd >> $apidir/log/db_migrate.log 2>&1
+    RAILS_ENV=production SAFETY_ASSURED=1 bin/rails $cmd >> "$apidir"/log/db_migrate.log 2>&1
     if [[ $? > 0 ]];then
       (>&2 echo "Command $cmd FAILED")
       exit 1
@@ -301,7 +301,7 @@ function prepare_database_setup {
 
   if [ -n "$RUN_INITIAL_SETUP" ]; then
     if [[ ! "$SETUP_ONLY" ]];then
-      `systemctl restart obsscheduler.service`
+      systemctl restart obsscheduler.service
     fi
   fi
 }
@@ -356,10 +356,10 @@ EOF
 ###############################################################################
 function check_server_key {
   # reuse signing key even if hostname changed
-  if [ ! -e $backenddir/certs/server.key ]; then
+  if [ ! -e "$backenddir"/certs/server.key ]; then
       logline "Creating $backenddir/certs/server.key"
-      install -d -m 0700 $backenddir/certs
-      openssl genrsa -out $backenddir/certs/server.key 1024 2>/dev/null
+      install -d -m 0700 "$backenddir"/certs
+      openssl genrsa -out "$backenddir"/certs/server.key 1024 2>/dev/null
   else
       logline "Found $backenddir/certs/server.key"
   fi
@@ -368,8 +368,8 @@ function check_server_key {
 function import_ca_cert {
   # apache has to trust the api ssl certificate
   if [ ! -e /etc/ssl/certs/server.${FQHOSTNAME}.crt ]; then
-    cp $backenddir/certs/server.${FQHOSTNAME}.crt \
-      ${TRUST_ANCHORS_DIR}/server.${FQHOSTNAME}.pem
+    cp "$backenddir"/certs/server.${FQHOSTNAME}.crt \
+      "$TRUST_ANCHORS_DIR"/server.${FQHOSTNAME}.pem
     $UPDATE_SSL_TRUST_BIN
   fi
 }
@@ -380,20 +380,20 @@ function relink_server_cert {
     CERT_LINK_FILE=$backenddir/certs/server.crt
     # check if CERT_LINK_FILE not exists or is symbolic link because we don't
     # want to remove real files
-    if [ ! -e $CERT_LINK_FILE -o -L $CERT_LINK_FILE ];then
+    if [ ! -e "$CERT_LINK_FILE" ] || [ -L "$CERT_LINK_FILE" ];then
       # change links for certs according to hostnames
-      cd $backenddir/certs
+      cd "$backenddir"/certs || exit 1
       rm -f server.crt
       ln -sf server.${FQHOSTNAME}.crt server.crt
-      cd - >/dev/null
+      cd - >/dev/null || exit 1
     fi
   fi
 }
 
 ###############################################################################
 function fix_permissions {
-  cd $apidir
-  chown -R $HTTPD_USER:$HTTPD_GROUP $apidir/log
+  cd "$apidir" || exit 1
+  chown -R "$HTTPD_USER:$HTTPD_GROUP" "$apidir"/log
 }
 
 ###############################################################################
@@ -428,7 +428,7 @@ function create_overview_html {
 ###############################################################################
 
 function ask {
-  logline $1
+  logline "$1"
   if [[ $NON_INTERACTIVE == 1 ]];then
     rv=$2
     logline "Using default value '$rv' in non-interactive mode"
@@ -450,10 +450,10 @@ function check_required_backend_services {
   REQUIRED_SERVICES="obsrepserver obssrcserver obsscheduler obsdispatcher obspublisher"
 
   for srv in $REQUIRED_SERVICES ;do
-    ENABLED=`systemctl is-enabled $srv`
-    [[ "$ENABLED" == "enabled" ]] || systemctl enable --now $srv
-    ACTIVE=`systemctl is-active $srv`
-    [[ "$ACTIVE" == "active" ]] || systemctl start $srv
+    ENABLED=$(systemctl is-enabled "$srv")
+    [[ "$ENABLED" == "enabled" ]] || systemctl enable --now "$srv"
+    ACTIVE=$(systemctl is-active "$srv")
+    [[ "$ACTIVE" == "active" ]] || systemctl start "$srv"
   done
 
 }
@@ -465,12 +465,12 @@ function check_recommended_backend_services {
   RECOMMENDED_SERVICES="obsdodup obsdeltastore obssigner $OBS_SIGND obsservicedispatch"
 
   for srv in $RECOMMENDED_SERVICES;do
-    STATE=$(systemctl is-enabled $srv)
-    if [ $STATE != "enabled" ];then
+    STATE=$(systemctl is-enabled "$srv")
+    if [ "$STATE" != "enabled" ];then
       ask "Service $srv is not enabled. Would you like to enable it? [Yn]" "y"
       case $rv in
         y|yes|Y|YES)
-          systemctl enable --now $srv
+          systemctl enable --now "$srv"
         ;;
       esac
     else
@@ -491,12 +491,12 @@ function check_optional_backend_services {
   OPTIONAL_SERVICES="obswarden obsapisetup obsstoragesetup obsworker obsservice obssourcepublish"
 
   for srv in $OPTIONAL_SERVICES;do
-    STATE=$(systemctl is-enabled $srv)
-    if [ $STATE != "enabled" ];then
+    STATE=$(systemctl is-enabled "$srv")
+    if [ "$STATE" != "enabled" ];then
       ask "Service $srv is not enabled. Would you like to enable it? [yN]" $DEFAULT_ANSWER
       case $rv in
         y|yes|Y|YES)
-          systemctl enable --now $srv
+          systemctl enable --now "$srv"
         ;;
       esac
     else
@@ -511,18 +511,18 @@ function prepare_apache2 {
 
   PKG2INST=""
   for pkg in $APACHE_ADDITIONAL_PACKAGES;do
-    rpm -q $pkg >/dev/null || PKG2INST="$PKG2INST $pkg"
+    rpm -q "$pkg" >/dev/null || PKG2INST="$PKG2INST $pkg"
   done
 
   if [[ -n $PKG2INST ]];then
-    $INST_PACKAGES_CMD $PKG2INST >/dev/null
+    $INST_PACKAGES_CMD "$PKG2INST" >/dev/null
   fi
 
   if [ "$CONFIGURE_APACHE" == 1 ];then
     MODULES="passenger rewrite proxy proxy_http headers socache_shmcb xforward"
 
     for mod in $MODULES;do
-      a2enmod -q $mod || a2enmod $mod
+      a2enmod -q "$mod" || a2enmod "$mod"
     done
 
     FLAGS=SSL
@@ -538,7 +538,7 @@ function prepare_passenger {
 
   perl -p -i -e \
     's#^(\s*)PassengerRuby "/usr/bin/ruby"#$1\PassengerRuby "/usr/bin/ruby.ruby2.5"#' \
-      $MOD_PASSENGER_CONF
+      "$MOD_PASSENGER_CONF"
 
 }
 ###############################################################################
@@ -572,8 +572,8 @@ function prepare_obssigner {
            %commit
            %echo done
 EOF
-      gpg2 --homedir $backenddir/gnupg --batch --gen-key /tmp/obs-gpg.$$
-      gpg2 --homedir $backenddir/gnupg --export -a > "$backenddir"/obs-default-gpg.asc
+      gpg2 --homedir "$backenddir"/gnupg --batch --gen-key /tmp/obs-gpg.$$
+      gpg2 --homedir "$backenddir"/gnupg --export -a > "$backenddir"/obs-default-gpg.asc
       # empty file just for accepting the key
       touch "$backenddir/gnupg/phrases/defaultkey@localobs"
     fi
@@ -590,10 +590,10 @@ EOF
       rm /tmp/obs-gpg.$$
       sed -i 's,^# \(our $sign =.*\),\1,' /usr/lib/obs/server/BSConfig.pm
       # ensure that $OBS_SIGND gets restarted if already started
-      systemctl is-enabled $OBS_SIGND 2>&1 > /dev/null
+      systemctl is-enabled "$OBS_SIGND" >/dev/null 2>&1
       if [ $? -eq 0 ] ; then
         logline "Restarting $OBS_SIGND"
-        systemctl restart $OBS_SIGND
+        systemctl restart "$OBS_SIGND"
       fi
     fi
     if [ ! -e "$backenddir"/obs-default-gpg.asc ] ; then
@@ -657,9 +657,9 @@ function enable_forceprojectkeys {
 
   # This is done manually and not via api to avoid authentication
   # and service dependency (systemd) problems.
-  cd $apidir
+  cd "$apidir" || exit 1
   echo " - Setting enforce_project_keys in api_production.configurations to '$ENABLE_FORCEPROJECTKEYS'"
-  mysql -u $MYSQL_USER -p$MYSQL_PASS -e "update configurations SET enforce_project_keys=$ENABLE_FORCEPROJECTKEYS" api_production || exit 1
+  mysql -u "$MYSQL_USER" -p"$MYSQL_PASS" -e "update configurations SET enforce_project_keys=$ENABLE_FORCEPROJECTKEYS" api_production || exit 1
 
   echo " - Starting 'rails writeconfiguration'"
   RAILS_ENV=production bin/rails writeconfiguration || exit 1
@@ -669,9 +669,9 @@ function enable_forceprojectkeys {
 
 function create_sign_cert {
   echo "Starting create_sign_cert"
-  if [ -f "$backenddir/obs-default-gpg.asc" -a ! -f "$backenddir/obs-default-gpg.cert" ];then
+  if [ -f "$backenddir/obs-default-gpg.asc" ] && [ ! -f "$backenddir/obs-default-gpg.cert" ];then
     echo "Creating new signer cert"
-    GNUPGHOME="$backenddir/gnupg" sign --test-sign $SIGND_BIN -C $backenddir/obs-default-gpg.asc > $backenddir/obs-default-gpg.cert
+    GNUPGHOME="$backenddir/gnupg" sign --test-sign $SIGND_BIN -C "$backenddir"/obs-default-gpg.asc > "$backenddir"/obs-default-gpg.cert
   else
     echo "Skipping new signer cert"
   fi
@@ -754,8 +754,8 @@ if [[ ! $BOOTSTRAP_TEST_MODE == 1 && $0 != "-bash" ]];then
 
   ### In case of the appliance, we never know where we boot up !
   OLDFQHOSTNAME="NOTHING"
-  if [ -e $backenddir/.oldfqhostname ]; then
-    OLDFQHOSTNAME=`cat $backenddir/.oldfqhostname`
+  if [ -e "$backenddir"/.oldfqhostname ]; then
+    OLDFQHOSTNAME=$(cat "$backenddir"/.oldfqhostname)
   fi
 
   DETECTED_HOSTNAME_CHANGE=0
@@ -771,14 +771,14 @@ if [[ ! $BOOTSTRAP_TEST_MODE == 1 && $0 != "-bash" ]];then
     adjust_api_config
   fi
 
-  echo "$FQHOSTNAME" > $backenddir/.oldfqhostname
+  echo "$FQHOSTNAME" > "$backenddir"/.oldfqhostname
 
-  OBSVERSION=`rpm -q --qf '%{VERSION}' obs-server`
+  OBSVERSION=$(rpm -q --qf '%{VERSION}' obs-server)
   if [ -e /etc/os-release ];then
     # execute in subshell to preserve the values of the variables
     # $NAME and $VERSION as these are very generic
-    OS_NAME=`. /etc/os-release;echo $NAME`
-    OS_VERSION=`. /etc/os-release;echo $VERSION`
+    OS_NAME=$(. /etc/os-release;echo "$NAME")
+    OS_VERSION=$(. /etc/os-release;echo $VERSION)
     OS="$OS_NAME $OS_VERSION"
   else
     OS="UNKNOWN"
