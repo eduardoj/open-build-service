@@ -1,0 +1,2 @@
+Test file with some random text.
+Add a new line.
