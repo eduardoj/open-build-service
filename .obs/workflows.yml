@@ -1,13 +1,13 @@
 workflow:
   steps:
     - branch_package:
-        source_project: OBS:Server:Unstable
-        source_package: obs-server
+        source_project: home:Admin
+        source_package: ctris
   filters:
     architectures:
       only:
         - x86_64
     repositories:
       only:
-        - openSUSE_Factory
+        - openSUSE_Tumbleweed
         - SLE_15_SP3
