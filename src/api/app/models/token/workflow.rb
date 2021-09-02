@@ -6,6 +6,7 @@ class Token::Workflow < Token
   end
 
   def call(options)
+    # TODO: Remove me. Documentation for call
     extractor = TriggerControllerService::ScmExtractor.new(options[:scm], options[:event], options[:payload])
     return unless extractor.allowed_event_and_action?
 
