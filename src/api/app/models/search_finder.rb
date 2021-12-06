@@ -26,7 +26,7 @@ class SearchFinder
       @relation = repositories
     when :request
       @relation = bs_requests
-      @preloads = bs_request_preloads
+      @preloaded_classes = bs_request_preloads
     when :person
       @relation = users
     when :channel, :channel_binary
