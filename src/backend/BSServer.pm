@@ -100,7 +100,7 @@ sub serveropen {
   my @sock;
   for $port (@ports) {
     my $s;
-    if (!ref($port) && $port =~ /^&/) {
+    if (ref($port) eq '' && $port =~ /^&/) {
       open($s, "<$port") || die("socket open: $!\n");
     } else {
       socket($s , PF_INET, SOCK_STREAM, $tcpproto) || die "socket: $!\n";
@@ -782,7 +782,7 @@ sub reply_file {
   my $cl = (grep {/^content-length:/i} @hdrs)[0];
   if (!$cl && !$chunked) {
     # detect file size
-    if (!ref($file)) {
+    if (ref($file) eq '') {
       my $fd;
       open($fd, '<', $file) || die("$file: $!\n");
       $file = $fd;

@@ -67,22 +67,22 @@ sub boolop {
       $e2 = $e2->{'_content'};
     }
     if ($op == \&boolop_not) {
-      if (!ref($e1)) {
+      if (ref($e1) eq '') {
         push @vr, $e1 ? '' : 'true';
       } else {
         push @vr, (grep {$_} @$e1) ? '' : 'true';
       }
       next;
     }
-    if (!ref($e1) && !ref($e2)) {
+    if (ref($e1) eq '' && ref($e2) eq '') {
       push @vr, $op->($e1, $e2) ? 'true' : '';
       next;
     }
-    if (!ref($e1)) {
+    if (ref($e1) eq '') {
       push @vr, (grep {$op->($e1, $_)} @$e2) ? 'true' : '';
       next;
     }
-    if (!ref($e2)) {
+    if (ref($e2) eq '') {
       push @vr, (grep {$op->($_, $e2)} @$e1) ? 'true' : '';
       next;
     }

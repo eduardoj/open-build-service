@@ -82,7 +82,7 @@ sub _workout {
     $indent = substr($indent, 2);
   }
   for my $e (@how) {
-    if (!$inelem && !ref($e) && $e ne '_content') {
+    if (!$inelem && ref($e) eq '' && $e ne '_content') {
       next unless exists $d2{$e};
       _addescaped($ret, " $e");
       _addescaped3($ret, '="', $d2{$e}, '"');
@@ -97,7 +97,7 @@ sub _workout {
     next unless exists $d2{$en};
     my $ee = '';
     _addescaped($ee, $en);
-    if (!ref($e) && $e eq '_content' && !$gotel) {
+    if (ref($e) eq '' && $e eq '_content' && !$gotel) {
       $gotel = 2;	# special marker to strip indent
       _addescaped3($ret, '>', $d2{$e}, "\n");
       delete $d2{$e};
@@ -105,7 +105,7 @@ sub _workout {
     }
     $ret .= ">\n" unless $gotel;
     $gotel = 1;
-    if (!ref($e)) {
+    if (ref($e) eq '') {
       die("'$e' must be scalar\n") if ref($d2{$e});
       if ($e eq '_content') {
 	my $c = $d2{$e};
@@ -120,7 +120,7 @@ sub _workout {
       }
       delete $d2{$e};
       next;
-    } elsif (@$e == 1 && !ref($e->[0])) {
+    } elsif (@$e == 1 && ref($e->[0]) eq '') {
       die("'$en' must be array\n") unless UNIVERSAL::isa($d2{$en}, 'ARRAY');
       for my $se (@{$d2{$en}}) {
 	_addescaped3($ret, "$indent  <$ee>", $se, "</$ee>\n");
@@ -189,7 +189,7 @@ sub _handle_start_slow {
     $ke = $known->{$e};
     die("unknown element '$e'\n") unless defined $ke;
   }
-  if (!ref($ke)) {
+  if (ref($ke) eq '') {
     die("element '$e' contains attributes @{[keys %{{@a}}]}\n") if @a;
     if (!$ke) {
       die("element '$e' must be singleton\n") if exists $out->{$e};
@@ -259,9 +259,9 @@ sub _toknown {
   my ($me, @dtd) = @_;
   my %known = map {ref($_) ? (!@$_ ? () : (ref($_->[0]) ? $_->[0]->[0] : $_->[0] => $_)) : ($_=> $_)} @dtd;
   for my $v (values %known) {
-    if (!ref($v)) {
+    if (ref($v) eq '') {
       $v = 0;
-    } elsif (@$v == 1 && !ref($v->[0])) {
+    } elsif (@$v == 1 && ref($v->[0]) eq '') {
       $v = 1;
     } elsif (@$v == 1) {
       $v = [1, _toknown(@{$v->[0]}) ];

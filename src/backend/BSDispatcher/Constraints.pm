@@ -184,7 +184,7 @@ sub overwrite {
   for my $k (sort keys %$src) {
     next if $k eq "conditions";
     my $d = $src->{$k};
-    if (!exists($dst->{$k}) || !ref($d) || ref($d) ne 'HASH') {
+    if (!exists($dst->{$k}) || ref($d) eq '' || ref($d) ne 'HASH') {
       $dst->{$k} = $d;
     } else {
       overwrite($dst->{$k}, $d);
@@ -242,10 +242,10 @@ sub list2struct {
           @how = ();
           last;
         }
-        if (!ref($ke) || (@$ke == 1 && !ref($ke->[0]))) {
+        if (ref($ke) eq '' || (@$ke == 1 && ref($ke->[0]) eq '')) {
           die("element '$e' has subelements\n") if @loc;
           die("element '$e' contains attributes\n") if @l && $l[0] =~ /=/;
-          if (!ref($ke)) {
+          if (ref($ke) eq '') {
             delete $out->{$e} unless $addit;
             die("element '$e' must be singleton\n") if exists $out->{$e};
             $out->{$e} = join(' ', @l);

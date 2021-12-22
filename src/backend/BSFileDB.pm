@@ -293,7 +293,7 @@ sub fdb_add_i {
   $r->{$lay->[0]} = $num;
   $d = encode_line($r, $lay)."\n";
   (syswrite(F, $d) || 0) == length($d) || die("$fn write error: $!\n");
-  if (!ref($fn)) {
+  if (ref($fn) eq '') {
     close(F) || die("$fn write error: $!\n");
   }
   return $r;

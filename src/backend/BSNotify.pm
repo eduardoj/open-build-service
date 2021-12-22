@@ -36,7 +36,7 @@ sub notify {
   my ($type, $p, $payload) = @_;
 
   # strip
-  $p = { map {$_ => $p->{$_}} grep {defined($p->{$_}) && !ref($p->{$_})} sort keys %{$p || {}} };
+  $p = { map {$_ => $p->{$_}} grep {defined($p->{$_}) && ref($p->{$_}) eq ''} sort keys %{$p || {}} };
 
   my $param = {
     'uri' => "$BSConfig::srcserver/notify/$type",

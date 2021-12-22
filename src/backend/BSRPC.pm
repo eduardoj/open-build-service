@@ -277,7 +277,7 @@ sub rpc {
     }
   }
 
-  push @xhdrs, "Content-Length: ".length($data) if defined($data) && !ref($data) && !$chunked && !grep {/^content-length:/i} @xhdrs;
+  push @xhdrs, "Content-Length: ".length($data) if defined($data) && ref($data) eq '' && !$chunked && !grep {/^content-length:/i} @xhdrs;
   push @xhdrs, "Transfer-Encoding: chunked" if $chunked;
   if ($param->{'authenticator'} && !grep {/^authorization:/i} @xhdrs) {
     # ask authenticator for cached authorization
@@ -324,7 +324,7 @@ sub rpc {
       print "> $_\n" for split("\r\n", $req);
       #print "> $data\n" unless ref($data);
     }
-    if (!ref($data)) {
+    if (ref($data) eq '') {
       # append body to request (chunk encoded if requested)
       if ($chunked) {
 	$data = sprintf("%X\r\n", length($data)).$data."\r\n" if $data ne '';
@@ -335,7 +335,7 @@ sub rpc {
     }
     if ($param->{'sender'}) {
       $param->{'sender'}->($param, $sock, $req, $data);
-    } elsif (!ref($data)) {
+    } elsif (ref($data) eq '') {
       BSHTTP::swrite($sock, $req);
     } else {
       BSHTTP::swrite($sock, $req);

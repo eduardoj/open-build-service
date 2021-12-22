@@ -120,7 +120,7 @@ sub writecpio {
       my $file = exists($ent->{'file'}) ? $ent->{'file'} : $ent->{'filename'};
       my ($efd, $error) = openentfile($ent, $file, \@s, $opts{'follow'});
       if ($error) {
-	close($efd) if $efd && !ref($file);
+	close($efd) if $efd && ref($file) eq '';
         die($error) unless $collecterrors;
         $errors->{'data'} .= $error;
 	next;

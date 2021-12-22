@@ -171,7 +171,7 @@ sub notify {
     $p->{'payload'} = $payloadkey;
     print "notification payload for $p->{'project'}/$p->{'repo'} stored in $payloadkey\n" if $p->{'project'} && $p->{'repo'};
   }
-  my @n = map {"$_=$p->{$_}"} grep {defined($p->{$_}) && !ref($p->{$_})} sort keys %{$p || {}};
+  my @n = map {"$_=$p->{$_}"} grep {defined($p->{$_}) && ref($p->{$_}) eq ''} sort keys %{$p || {}};
   mkdir_p($eventdir);
   BSFileDB::fdb_add_i("$eventdir/lastnotifications", $notificationlay, {'type' => $type, 'time' => $time, 'data' => \@n});
 }
@@ -1625,7 +1625,7 @@ sub getprojpack {
 	    }
 	  }
 	  my $channel = $channeldata{$files->{'_channel'}} || 'bad data';
-          if (!ref($channel)) {
+          if (ref($channel) eq '') {
 	    $pinfo->{'error'} = "bad channel: $channel";
 	    next;
 	  }
@@ -1726,7 +1726,7 @@ sub getprojpack {
 		$expandedrepos{"$projid/$repoid/hostsystem"} = $@ if $@;
 		$path = $expandedrepos{"$projid/$repoid/hostsystem"};
 	      }
-	      if (!ref($path)) {
+	      if (ref($path) eq '') {
 		chomp $path;
 		$rinfo->{'error'} = $path;
 		next;
@@ -2761,7 +2761,7 @@ sub getfilelist {
     my $lfiles = BSSrcServer::Link::handlelinks(\%lrev, $files, $li);
     BSSrcServer::Multibuild::updatemultibuild($projid, $packid, $lfiles) if $islatestrev && !$cgi->{'linkrev'} && ref($lfiles);
     if ($cgi->{'expand'}) {
-      if (!ref($lfiles)) {
+      if (ref($lfiles) eq '') {
 	if ($cgi->{'withlinked'} && !$view) {
 	  my $ret = {};
 	  $ret->{'name'} = $packid;

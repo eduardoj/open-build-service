@@ -92,7 +92,7 @@ sub pack_raw {
 
 sub unpack_raw {
   my ($in, $allowed, $optional, $exact) = @_;
-  $allowed = [ $allowed ] if $allowed && !ref($allowed);
+  $allowed = [ $allowed ] if $allowed && ref($allowed) eq '';
   if (length($in) < 2) {
     return ($in, undef, undef, '') if $optional || grep {!defined($_)} @{$allowed || []};
     die("unexpected end of asn1 data\n");
@@ -227,7 +227,7 @@ sub unpack_sequence {
   my $tagbody;
   if ($allowed && ref($allowed)) {
     for my $all (@$allowed) {
-      return @ret, $in if $all && !ref($all) && $all == -1;	# -1: get rest
+      return @ret, $in if $all && ref($all) eq '' && $all == -1;	# -1: get rest
       ($in, undef, undef, $tagbody) = unpack_raw($in, $all);
       push @ret, $tagbody;
     }

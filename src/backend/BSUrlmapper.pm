@@ -98,7 +98,7 @@ sub get_extrep_stageservers {
   my $extrep = map_to_extrep($prp);
   return ($extrep, undef) unless $extrep && ref($extrep);
   my $stageservers = $extrep->[3];
-  $stageservers = [ $stageservers ] if $stageservers && !ref($stageservers);
+  $stageservers = [ $stageservers ] if $stageservers && ref($stageservers) eq '';
   return ($extrep->[0], $stageservers, $extrep->[4]);
 }
 

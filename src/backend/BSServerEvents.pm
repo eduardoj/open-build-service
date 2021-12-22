@@ -161,7 +161,7 @@ sub reply_file {
     $filename = $filename->{'filename'};
   }
   my $fd;
-  if (!ref($filename)) {
+  if (ref($filename) eq '') {
     open($fd, '<', $filename) || die("$filename: $!\n");
   } else {
     $fd = $filename;
@@ -212,7 +212,7 @@ sub cpio_nextfile {
       my $file = exists($ent->{'file'}) ? $ent->{'file'} : $ent->{'filename'};
       my ($fd, $error) = BSCpio::openentfile($ent, $file, \@s);
       if ($error) {
-        close($fd) if $fd && !ref($file);
+        close($fd) if $fd && ref($file) eq '';
         $ev->{'cpioerrors'}->{'data'} .= $error;
 	next;
       }

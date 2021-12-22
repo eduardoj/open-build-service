@@ -97,7 +97,7 @@ sub put_doddata_in_cache {
     }
   }
   my $data = readparsed("$dir/doddata");
-  if (!ref($data)) {
+  if (ref($data) eq '') {
     print "    download on demand: $data\n";
     return undef;
   }

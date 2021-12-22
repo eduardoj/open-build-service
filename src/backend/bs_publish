@@ -89,11 +89,11 @@ my $trackercacheversion = 2;
 my $testmode;
 
 # convert hooks with filenames to real code refs
-if ($BSConfig::createrepo_rpmmd_hook && !ref($BSConfig::createrepo_rpmmd_hook)) {
+if ($BSConfig::createrepo_rpmmd_hook && ref($BSConfig::createrepo_rpmmd_hook) eq '') {
   $BSConfig::createrepo_rpmmd_hook = require($BSConfig::createrepo_rpmmd_hook);
   die("createrepo_rpmmd_hook did not return a code ref\n") unless ref($BSConfig::createrepo_rpmmd_hook);
 }
-if ($BSConfig::publisher_compile_content_hook && !ref($BSConfig::publisher_compile_content_hook)) {
+if ($BSConfig::publisher_compile_content_hook && ref($BSConfig::publisher_compile_content_hook) eq '') {
   $BSConfig::publisher_compile_content_hook = require($BSConfig::publisher_compile_content_hook);
   die("publisher_compile_content_hook did not return a code ref\n") unless ref($BSConfig::publisher_compile_content_hook);
 }
