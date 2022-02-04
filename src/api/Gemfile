@@ -23,8 +23,6 @@ gem 'delayed_job_active_record'
 # to fill errbit
 gem 'airbrake'
 gem 'airbrake-ruby'
-# as JSON library - the default json conflicts with activerecord (by means of vice-versa monkey patching)
-gem 'yajl-ruby', require: 'yajl/json_gem'
 # to search the database
 gem 'thinking-sphinx'
 # to paginate search results
