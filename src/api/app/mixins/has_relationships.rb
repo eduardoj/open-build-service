@@ -55,6 +55,7 @@ module HasRelationships
           end
     rel = rel.where(role_id: role.id) if role
     transaction do
+      rel.map(&:event_delete)
       rel.delete_all
       write_to_backend
     end
