@@ -41,7 +41,7 @@ BEGIN {
     $uri =~ s#^https?://##;
 
     if ($Test::Mock::BSRPC::fixtures_map->{$uri}) {
-      $uri = $Test::Mock::BSRPC::fixtures_map->{$uri}
+      $uri = $Test::Mock::BSRPC::fixtures_map->{$uri};
     } else {
       $uri =~ s/\//_/g;
       $uri =~ s/_/\//;
@@ -57,7 +57,11 @@ BEGIN {
 
       my $receiver = $param->{'receiver'};
       if ($receiver) {
-	$ret = $receiver->(BSHTTP::str2req($ret), $param, $xmlargs || $param->{'receiverarg'}) if $receiver;
+	eval {
+	  $param->{directory} = $Test::Mock::BSRPC::directory_map->{$param->{directory}} if $Test::Mock::BSRPC::directory_map->{$param->{directory}};
+	  $ret = $receiver->(BSHTTP::str2req($ret), $param, $xmlargs || $param->{'receiverarg'});
+	};
+	die "Test::Mock::BSRPC: $@" if $@;
       } elsif ($xmlargs) {
 	$ret = BSUtil::fromxml($ret, $xmlargs);
       }
