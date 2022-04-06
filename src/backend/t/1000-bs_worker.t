@@ -27,21 +27,26 @@ my @tc = (
   verifymd5  => 'd41d8cd98f00b204e9800998ecf8427e',
   }
 );
+$tc[0]->{uri} = "srcserver/getsources?project=$tc[0]->{project}&package=$tc[0]->{package}&srcmd5=$tc[0]->{srcmd5}";
 
 $Test::Mock::BSRPC::fixtures_map = {
-  "srcserver/getsources?project=$tc[0]->{project}&package=$tc[0]->{package}&srcmd5=$tc[0]->{srcmd5}"
-    => 'srcserver/getsources',
+  $tc[0]->{uri} => "srcserver/getsources",
 };
 $Test::Mock::BSRPC::directory_map = {
-  "srcserver/getsources?project=$tc[0]->{project}&package=$tc[0]->{package}&srcmd5=$tc[0]->{srcmd5}"
-    => "$BSConfig::bsdir/srcserver",
+  $tc[0]->{uri} => "$BSConfig::bsdir/srcserver",
 };
-
 my ($got, $expected);
 
-
 # Test Case 01
-($got) = getsources($tc[0], "srcserver/getsources?project=$tc[0]->{project}&package=$tc[0]->{package}&srcmd5=$tc[0]->{srcmd5}");
+($got) = getsources({
+                      srcserver => $tc[0]->{srcserver},
+		      project   => $tc[0]->{project},
+		      package   => $tc[0]->{package},
+		      srcmd5    => $tc[0]->{srcmd5},
+		      verifymd5 => $tc[0]->{verifymd5},
+		    },
+		    $tc[0]->{uri}
+		  );
 $expected = "$tc[0]->{verifymd5}  $tc[0]->{package}";
 is_deeply($got, $expected, 'Return value of getsources');
 
