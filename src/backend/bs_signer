@@ -913,6 +913,9 @@ my $conf = {
 $conf->{'getflavor'} = $BSConfig::signer_getflavor if $BSConfig::signer_getflavor;
 
 die("sign program is not configured!\n") unless $BSConfig::sign;
+
+return 1 if @ARGV == 1 && $ARGV[0] eq '--testcase';
+
 check_sign_S();
 print "warning: sign does not seem to support checksum files, please update\n" unless $sign_supports_S;
 
