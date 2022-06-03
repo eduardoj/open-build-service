@@ -76,5 +76,6 @@ nbproject
 *.iws
 .idea/
 .kanku/
+.tidyall.d/
 dist/aws_credentials
 dist/ec2utils.conf
