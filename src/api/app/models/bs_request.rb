@@ -887,7 +887,7 @@ class BsRequest < ApplicationRecord
         auto_accept_user = User.find_by!(login: approver)
       end
       auto_accept_user.run_as do
-        raise 'Request lacks definition of owner for auto accept' unless User.session!
+        raise 'Request lacks definition of owner for auto accept' unless User.session
 
         begin
           change_state(newstate: 'accepted', comment: 'Auto accept')
