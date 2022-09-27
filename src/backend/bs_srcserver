@@ -6783,6 +6783,19 @@ sub getconfiguration {
   return ($configuration, $BSXML::configuration);
 }
 
+sub getbsconfig {
+  use Data::Dumper;
+  $Data::Dumper::Terse = 1;
+  my $bsconfig = {
+    'container_registries' => Dumper($BSConfig::container_registries),
+    'partitioning'         => Dumper($BSConfig::partitioning),
+    'publish_containers'   => Dumper($BSConfig::publish_containers),
+
+  };
+  foreach my $key (keys %$bsconfig) { chomp $bsconfig->{$key} }
+  return ($bsconfig, $BSXML::bsconfig);
+}
+
 ####################################################################
 
 sub putissuetrackers {
@@ -7631,6 +7644,7 @@ my $dispatches = [
   # configuration
   'PUT:/configuration' => \&putconfiguration,
   '/configuration' => \&getconfiguration,
+  '/bsconfig' => \&getbsconfig,
 
   # issue trackers
   'PUT:/issue_trackers' => \&putissuetrackers,

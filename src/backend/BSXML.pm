@@ -1710,6 +1710,13 @@ our $configuration = [
   'unlisted_projects_filter_description'
 ];
 
+our $bsconfig = [
+  'bsconfig' =>
+    'container_registries',
+    'partitioning',
+    'publish_containers',
+];
+
 our $issue_trackers = [
     'issue-trackers' =>
      [[ 'issue-tracker' =>
