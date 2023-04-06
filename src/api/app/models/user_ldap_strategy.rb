@@ -188,7 +188,7 @@ class UserLdapStrategy
 
     # When the server closes the connection, @@ldap_search_con.nil? doesn't catch it
     # @@ldap_search_con.bound? doesn't catch it as well. So when an error occurs, we
-    # simply it try it a seccond time, which forces the ldap connection to
+    # simply it try it a second time, which forces the ldap connection to
     # reinitialize (@@ldap_search_con is unbound and nil).
     ldap_first_try = true
     user = nil

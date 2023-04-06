@@ -1,19 +1,19 @@
 require 'rails_helper'
 
 RSpec.describe UserLdapStrategy do
-  let(:dn_string_no_uid)   { 'cn=jsmith,ou=Promotions,dc=noam,dc=com' }
-  let(:dn_string_no_dc)    { 'cn=jsmith,ou=Promotions,uid=dister' }
-  let(:dn_string_complete) { 'cn=jsmith,ou=Promotions,dc=noam,dc=com,uid=dister' }
-
   describe '.dn2user_principal_name' do
     context 'when no user id is provided' do
+      let(:dn_string_no_uid) { 'cn=jsmith,ou=Promotions,dc=noam,dc=com' }
+
       it 'returns an empty string' do
         expect(UserLdapStrategy.dn2user_principal_name(dn_string_no_uid)).to eq('')
         expect(UserLdapStrategy.dn2user_principal_name([dn_string_no_uid])).to eq('')
       end
     end
 
-    context 'when no domain componant is provided' do
+    context 'when no domain component is provided' do
+      let(:dn_string_no_dc) { 'cn=jsmith,ou=Promotions,uid=dister' }
+
       it "returns 'dister@'" do
         expect(UserLdapStrategy.dn2user_principal_name(dn_string_no_dc)).to eq('dister@')
         expect(UserLdapStrategy.dn2user_principal_name([dn_string_no_dc])).to eq('dister@')
@@ -21,6 +21,8 @@ RSpec.describe UserLdapStrategy do
     end
 
     context 'when dc and user id is provided' do
+      let(:dn_string_complete) { 'cn=jsmith,ou=Promotions,dc=noam,dc=com,uid=dister' }
+
       it 'returns the correct ldap address' do
         expect(UserLdapStrategy.dn2user_principal_name(dn_string_complete)).to eq('dister@noam.com')
         expect(UserLdapStrategy.dn2user_principal_name([dn_string_complete])).to eq('dister@noam.com')
@@ -141,12 +143,6 @@ RSpec.describe UserLdapStrategy do
         allow(ldap_mock).to receive(:bound?).and_return(true)
       end
 
-      after do
-        # rspec-mocks doubles are not designed to last longer than for one
-        # example. Therefore we have to clear the stored connection.
-        UserLdapStrategy.class_variable_set(:@@ldap_search_con, nil)
-      end
-
       context "with 'ldap_group_objectclass_attr' configured" do
         before do
           allow(ldap_mock).to receive(:search).with(
@@ -189,16 +185,12 @@ RSpec.describe UserLdapStrategy do
                                         'ldap_authenticate' => :ldap))
     end
 
+    subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
+
     context 'ldap doesnt connect' do
       before do
         allow(UserLdapStrategy).to receive(:initialize_ldap_con).and_return(nil)
       end
-
-      after do
-        UserLdapStrategy.class_variable_set(:@@ldap_search_con, nil)
-      end
-
-      subject! { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
       it { is_expected.to be_nil }
     end
@@ -211,8 +203,6 @@ RSpec.describe UserLdapStrategy do
         before do
           allow(ldap_mock).to receive(:search)
         end
-
-        subject! { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
         it 'returns nil because the user was not found' do
           expect(subject).to be_nil
@@ -228,8 +218,6 @@ RSpec.describe UserLdapStrategy do
 
           allow(ldap_mock).to receive(:search)
         end
-
-        subject! { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
         it 'returns nil because the user was not found' do
           expect(subject).to be_nil
@@ -247,8 +235,6 @@ RSpec.describe UserLdapStrategy do
           allow(ldap_mock).to receive(:unbind)
         end
 
-        subject! { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
-
         it 'returns nil' do
           expect(subject).to be_nil
         end
@@ -264,8 +250,6 @@ RSpec.describe UserLdapStrategy do
           stub_const('CONFIG', CONFIG.merge('ldap_authenticate' => :local))
           allow(ldap_mock).to receive(:search).and_yield(ldap_user)
         end
-
-        subject! { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
         it 'returns nil' do
           expect(subject).to be_nil
@@ -283,8 +267,6 @@ RSpec.describe UserLdapStrategy do
           allow(ldap_mock).to receive(:search).and_yield(ldap_user)
         end
 
-        subject! { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
-
         it 'returns nil' do
           expect(subject).to be_nil
         end
@@ -300,7 +282,7 @@ RSpec.describe UserLdapStrategy do
           allow(ldap_mock).to receive(:search).and_yield(ldap_user)
         end
 
-        subject! { UserLdapStrategy.find_with_ldap('tux', nil) }
+        subject { UserLdapStrategy.find_with_ldap('tux', nil) }
 
         it 'returns nil' do
           expect(subject).to be_nil
@@ -313,8 +295,6 @@ RSpec.describe UserLdapStrategy do
         include_context 'mock searching a user' do
           let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'tux', 'sn' => ['John', 'Smith'] }) }
         end
-
-        subject! { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
         it 'returns name and username' do
           expect(subject).to eq(['John', 'tux'])
@@ -332,7 +312,7 @@ RSpec.describe UserLdapStrategy do
           allow(ldap_user_mock).to receive(:bound?).and_return(false)
         end
 
-        it { expect(UserLdapStrategy.find_with_ldap('tux', 'tux_password')).to be_nil }
+        it { is_expected.to be_nil }
       end
 
       context 'ldap_authenticate = :ldap and the users ldap_mail_attr is not set' do
@@ -341,8 +321,6 @@ RSpec.describe UserLdapStrategy do
         include_context 'mock searching a user' do
           let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'tux' }) }
         end
-
-        subject! { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
         it 'returns empty string and username' do
           expect(subject).to eq(['', 'tux'])
@@ -359,8 +337,6 @@ RSpec.describe UserLdapStrategy do
         before do
           stub_const('CONFIG', CONFIG.merge('ldap_name_attr' => 'fn'))
         end
-
-        subject! { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
         it 'returns the users ldap_name_attr and username' do
           expect(subject).to eq(['John', 'S'])
@@ -390,11 +366,6 @@ RSpec.describe UserLdapStrategy do
           allow(ldap_mock).to receive(:err2string).and_return('something went wrong')
           allow(ldap_mock).to receive(:unbind)
           # This connects to LDAP and stores the connection in a class var
-          UserLdapStrategy.find_with_ldap('tux', 'tux_password')
-        end
-
-        subject! do
-          # This attempts to use the LDAP connection which already exists in the class var
           UserLdapStrategy.find_with_ldap('tux', 'tux_password')
         end
 
