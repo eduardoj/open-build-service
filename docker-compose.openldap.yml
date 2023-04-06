@@ -1,0 +1,14 @@
+version: "2.1"
+services:
+  openldap:
+    image: registry.opensuse.org/opensuse/openldap
+    ports:
+      - "389:389"
+      - "636:636"
+    environment:
+      - LDAP_ADMIN_PASSWORD=admin
+      - LDAP_CONFIG_PASSWORD=config
+    hostname: openldap.example.org
+    # volumes:
+    #   - ./docker-files/ldapdb:/var/lib/ldap
+    #   - ./docker-files/ldapconf:/etc/openldap/slapd.d
