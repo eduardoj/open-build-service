@@ -8,7 +8,9 @@ services:
     environment:
       - LDAP_ADMIN_PASSWORD=admin
       - LDAP_CONFIG_PASSWORD=config
+      - LDAP_SEED_LDIF_PATH=/tmp/ldap_seed_ldif
     hostname: openldap.example.org
-    # volumes:
+    volumes:
     #   - ./docker-files/ldapdb:/var/lib/ldap
     #   - ./docker-files/ldapconf:/etc/openldap/slapd.d
+      - ./docker-files/openldap/ldap_seed_ldif:/tmp/ldap_seed_ldif
