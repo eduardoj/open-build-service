@@ -1,0 +1,9 @@
+dn: cn=users,ou=groups,dc=example,dc=org
+cn: users
+objectClass: top
+# objectClass: posixGroup
+# gidNumber: 100
+objectClass: groupOfNames
+member:
+# member: uid=test_user,dc=my-domain,dc=com
+# memberUid: test_user
