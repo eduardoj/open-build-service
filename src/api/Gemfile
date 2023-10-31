@@ -211,6 +211,8 @@ group :development, :test do
   gem 'selenium-webdriver', require: false
   # to add a sampling call-stack profiler, used by 'test-prof'
   gem 'stackprof', require: false
+  # for profiling method calls
+  gem 'method_profiler'
 end
 
 group :development do
