@@ -169,6 +169,8 @@ group :test do
   gem 'rspec_junit_formatter'
   # to test rabbitmq support
   gem 'bunny-mock'
+  # to profile tests
+  gem 'test-prof'
 end
 
 group :development, :test do
@@ -207,6 +209,8 @@ group :development, :test do
   gem 'puma', require: false
   # to drive headless chrome
   gem 'selenium-webdriver', require: false
+  # to add a sampling call-stack profiler, used by 'test-prof'
+  gem 'stackprof', require: false
 end
 
 group :development do
