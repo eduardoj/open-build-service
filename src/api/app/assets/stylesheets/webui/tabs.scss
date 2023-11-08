@@ -52,7 +52,6 @@ ul.scrollable-tabs {
 ul.nav.nav-tabs li.nav-item {
   & a {
     color: $link-color;
-    text-decoration: none;
 
     &:hover {
       color: $link-hover-color;
@@ -60,11 +59,10 @@ ul.nav.nav-tabs li.nav-item {
 
     &.dropdown-item.active,
     &.dropdown-item:active {
-      color: $white;
+      @extend .text-bg-primary;
 
       span.badge {
-        color: $link-hover-color;
-        background-color: $card-bg;
+        @extend .text-bg-light;
       }
     }
   }
