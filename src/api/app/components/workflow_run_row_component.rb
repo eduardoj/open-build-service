@@ -31,7 +31,7 @@ class WorkflowRunRowComponent < ApplicationComponent
               when 'running'
                 ['fas', 'fa-running']
               when 'success'
-                ['fas', 'fa-check', 'text-primary']
+                ['fas', 'fa-check', 'link-primary']
               else
                 ['fas', 'fa-exclamation-triangle', 'text-danger']
               end

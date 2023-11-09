@@ -29,7 +29,7 @@
         = button_tag(class: 'accordion-button collapsed',
                      data: { 'bs-toggle': 'collapse', 'bs-target': '#collapse-accepted-reviews' },
                      aria: { expanded: 'false', controls: 'collapse-accepted-reviews' }) do
-          %i.fas.fa-fw.fa-sm.fa-check.text-primary.align-middle.pe-4
+          %i.fas.fa-fw.fa-sm.fa-check.link-primary.align-middle.pe-4
           = pluralize(@accepted_reviews_count, 'Accepted Review')
       .accordion-collapse.collapse#collapse-accepted-reviews{ 'aria-labelledby': 'heading-accepted-reviews' }
         .accordion-body

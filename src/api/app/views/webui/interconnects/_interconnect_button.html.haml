@@ -1,7 +1,7 @@
 .list-group-item{ data: { interconnect: name } }
   .d-flex.w-100.justify-content-between
     %h5{ class: "#{'text-muted' unless exists}" }= title
-    .text-primary.connected{ class: "#{'d-none' unless exists}" } Connected
+    .text-bg-primary.connected{ class: "#{'d-none' unless exists}" } Connected
     - unless exists
       - params = "project[name]=#{u(name)}&project[remoteurl]=#{remoteurl}&project[title]=#{title}&project[description]=#{description}"
       = button_tag data: { url: interconnects_path,

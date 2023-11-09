@@ -45,7 +45,7 @@
       .pt-4
         = render(partial: 'webui/users/tokens/users/add_user_to_token_dialog', locals: { token: @token })
         = link_to('#', data: { 'bs-toggle': 'modal', 'bs-target': '#add-user-to-token-modal' }, id: 'add-user-to-token') do
-          %i.fas.fa-plus-circle.text-primary
+          %i.fas.fa-plus-circle.link-primary
           Add User
 
   .card-body
@@ -75,7 +75,7 @@
       .pt-4
         = render(partial: 'webui/users/tokens/users/add_group_to_token_dialog', locals: { token: @token })
         = link_to('#', data: { 'bs-toggle': 'modal', 'bs-target': '#add-group-to-token-modal' }, id: 'add-group-to-token') do
-          %i.fas.fa-plus-circle.text-primary
+          %i.fas.fa-plus-circle.link-primary
           Add Group
 
 = render DeleteConfirmationDialogComponent.new(modal_id: 'delete-user-from-token-modal',

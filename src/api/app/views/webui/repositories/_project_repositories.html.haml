@@ -13,16 +13,16 @@
         - if Distribution.any? || User.admin_session?
           %li.nav-item
             = link_to(new_project_distribution_path(project_name: project), class: 'nav-link') do
-              %i.fas.fa-plus-circle.text-primary
+              %i.fas.fa-plus-circle.link-primary
               Add from a Distribution
         %li.nav-item
           = link_to('#', data: { 'bs-toggle': 'modal', 'bs-target': '#add-repository-from-project' }, class: 'nav-link') do
-            %i.fas.fa-plus-circle.text-primary
+            %i.fas.fa-plus-circle.link-primary
             Add from a Project
       - if User.admin_session?
         %li.nav-item
           = link_to('#', data: { 'bs-toggle': 'modal', 'bs-target': '#add-dod-repository-modal' }, class: 'nav-link') do
-            %i.fas.fa-plus-circle.text-primary
+            %i.fas.fa-plus-circle.link-primary
             Add DoD Repository
 
 .card.mb-3

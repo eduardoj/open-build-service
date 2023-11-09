@@ -13,7 +13,7 @@
         %h3
           = @pagetitle
           = link_to('#', title: 'Create Staging Project', data: { 'bs-toggle': 'modal', 'bs-target': '#create-staging-projects-modal' }) do
-            %i.fas.fa-xs.fa-plus-circle.text-primary
+            %i.fas.fa-xs.fa-plus-circle.link-primary
 
         = render partial: 'create_staging_project', locals: { staging_workflow: @staging_workflow }
         = render partial: 'staging_managers_group', locals: { staging_workflow: @staging_workflow }

@@ -10,7 +10,7 @@
   :ruby
     package_name = package.tr('.:', '_')
     expanded = collapsed_packages.exclude?(package_name)
-  %h5.d-flex.flex-row.text-primary.mt-3.mb-3
+  %h5.d-flex.flex-row.link-primary.mt-3.mb-3
     = package
     - if buildresults.results.count > 1
       = collapse_link(expanded, package_name)

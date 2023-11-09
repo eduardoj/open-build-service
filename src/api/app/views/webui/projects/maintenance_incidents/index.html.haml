@@ -27,7 +27,7 @@
     - if policy(@project).create?
       .pt-4
         = link_to(project_maintenance_incidents_path(@project.name), method: :post) do
-          %i.fas.fa-plus-circle.text-primary
+          %i.fas.fa-plus-circle.link-primary
           Create Maintenance Incident
 
 - content_for :ready_function do

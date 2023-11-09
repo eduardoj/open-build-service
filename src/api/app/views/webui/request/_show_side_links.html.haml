@@ -14,7 +14,7 @@
       = render partial: 'maintainer_link', locals: { maintainers: package_maintainers }
   - if bs_request.superseding.present?
     %li
-      %i.fas.fa-plus-circle.text-primary
+      %i.fas.fa-plus-circle.link-primary
       Supersedes
       - bs_request.superseding.each do |supersed|
         = link_to supersed['number'], number: supersed['number']

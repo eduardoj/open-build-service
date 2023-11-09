@@ -19,7 +19,7 @@
                   = gpg_key.origin
                 \)
             = link_to(download_project_signing_keys_path(project_name: @project.name, kind: :gpg), title: 'Download Armored Key') do
-              %i.fas.fa-download.text-primary
+              %i.fas.fa-download.link-primary
         %hr
         - if gpg_key.present?
           %dl.row
@@ -54,7 +54,7 @@
                   = ssl_cert.origin
                 \)
             = link_to(download_project_signing_keys_path(project_name: @project.name, kind: :ssl), title: 'Download PEM Certificate') do
-              %i.fas.fa-download.text-primary
+              %i.fas.fa-download.link-primary
         %hr
         - if ssl_cert.present?
           %dl.row

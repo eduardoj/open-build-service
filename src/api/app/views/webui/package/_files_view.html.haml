@@ -23,11 +23,11 @@
       = form_tag(project_package_files_path(project, package), multipart: true, class: 'nav-item') do
         = file_field_tag 'files[]', class: 'd-none', id: 'filechooser', multiple: true
         %label.nav-link{ for: 'filechooser' }
-          %i.fas.fa-hard-drive.text-primary
+          %i.fas.fa-hard-drive.link-primary
           Add local files
       .nav-item
         = link_to(new_project_package_files_path(project, package), class: 'nav-link') do
-          %i.fas.fa-plus-circle.text-primary
+          %i.fas.fa-plus-circle.link-primary
           Add an empty file or service
     = render DeleteConfirmationDialogComponent.new(modal_id: 'delete-file-modal',
                                                    method: :post,

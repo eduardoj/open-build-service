@@ -9,7 +9,7 @@
         = render TokenCardComponent.with_collection(@tokens)
     .pt-4
       = link_to new_token_path do
-        %i.fas.fa-plus-circle.text-primary
+        %i.fas.fa-plus-circle.link-primary
         Create Token
 
 = paginate @tokens, views_prefix: 'webui'

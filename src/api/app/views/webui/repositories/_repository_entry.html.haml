@@ -17,7 +17,7 @@
       - component.with_action do
         = link_to('#', title: 'Add Download on Demand Source', class: 'nav-link p-1', data: { 'bs-toggle': 'modal',
                                                                       'bs-target': "#add-dod-source-modal-#{repository.id}" }) do
-          %i.fas.fa-plus-circle.text-primary
+          %i.fas.fa-plus-circle.link-primary
   - else
     = render partial: 'repository_card_content', locals: { project: project, repository: repository,
                 download_url: download_url, user_can_modify: user_can_modify,
@@ -39,7 +39,7 @@
       - component.with_action do
         = link_to('#', title: 'Add Repository Path', class: 'nav-link p-1',
                       data: { 'bs-toggle': 'modal', 'bs-target': "#add-repository-path-#{repository.id}" }) do
-          %i.fas.fa-plus-circle.text-primary
+          %i.fas.fa-plus-circle.link-primary
     - component.with_action do
       - url = "#{download_url}/#{project.to_s.gsub(':', ':/')}/#{repository}"
       = link_to(url, title: 'Download Repository', class: 'nav-link p-1') do
