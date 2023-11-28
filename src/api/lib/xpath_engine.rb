@@ -241,10 +241,6 @@ class XpathEngine
     @joins = []
   end
 
-  def logger
-    Rails.logger
-  end
-
   # Careful: there is no return value, the items found are passed to the calling block
   def find(xpath)
     # logger.debug "---------------------- parsing xpath: #{xpath} -----------------------"
@@ -365,6 +361,12 @@ class XpathEngine
     relation.distinct.pluck(:id)
   end
 
+  private
+
+  def logger
+    Rails.logger
+  end
+
   def parse_predicate_token_child(root, stack)
     qtype = stack.shift
     case qtype
@@ -402,7 +404,7 @@ class XpathEngine
       when :function
         fname = stack.shift
         fname_int = 'xpath_func_' + fname.tr('-', '_')
-        raise IllegalXpathError, "unknown xpath function '#{fname}'" unless respond_to?(fname_int)
+        raise IllegalXpathError, "unknown xpath function '#{fname}'" unless respond_to?(fname_int, true)
 
         __send__(fname_int, root, *stack.shift)
       when :child
@@ -410,7 +412,7 @@ class XpathEngine
       when *@operators
         opname = token.to_s
         opname_int = 'xpath_op_' + opname
-        raise IllegalXpathError, "unhandled xpath operator '#{opname}'" unless respond_to?(opname_int)
+        raise IllegalXpathError, "unhandled xpath operator '#{opname}'" unless respond_to?(opname_int, true)
 
         __send__(opname_int, root, *stack)
         stack = []
