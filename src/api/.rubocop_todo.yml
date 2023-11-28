@@ -142,7 +142,6 @@ Metrics/BlockNesting:
     - 'app/models/branch_package/check_for_update.rb'
     - 'app/models/bs_request.rb'
     - 'app/models/bs_request_action.rb'
-    - 'lib/xpath_engine.rb'
 
 # Offense count: 84
 # Configuration parameters: CountComments, Max, CountAsOne.

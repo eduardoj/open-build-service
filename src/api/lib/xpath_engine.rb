@@ -365,6 +365,31 @@ class XpathEngine
     relation.distinct.pluck(:id)
   end
 
+  def parse_predicate_token_child(root, stack)
+    qtype = stack.shift
+    case qtype
+    when :qname
+      stack.shift
+      root << stack.shift
+      stack.shift
+      qtype = stack.shift
+      if qtype == :predicate
+        parse_predicate(root, stack[0])
+        stack.shift
+      elsif qtype.nil? || qtype == :qname
+        # just a plain existens test
+        xpath_func_boolean(root, stack)
+      else
+        parse_predicate(root, qtype)
+      end
+      root.pop
+    when :any
+      # noop, already shifted
+    else
+      raise IllegalXpathError, "unhandled token '#{t.inspect}'"
+    end
+  end
+
   def parse_predicate(root, stack)
     # logger.debug "------------------ predicate ---------------"
     # logger.debug "-- pred_array: #{stack.inspect} --"
@@ -381,28 +406,7 @@ class XpathEngine
 
         __send__(fname_int, root, *stack.shift)
       when :child
-        qtype = stack.shift
-        case qtype
-        when :qname
-          stack.shift
-          root << stack.shift
-          qtype = stack.shift
-          qtype = stack.shift
-          if qtype == :predicate
-            parse_predicate(root, stack[0])
-            stack.shift
-          elsif qtype.nil? || qtype == :qname
-            # just a plain existens test
-            xpath_func_boolean(root, stack)
-          else
-            parse_predicate(root, qtype)
-          end
-          root.pop
-        when :any
-          # noop, already shifted
-        else
-          raise IllegalXpathError, "unhandled token '#{t.inspect}'"
-        end
+        parse_predicate_token_child(root, stack)
       when *@operators
         opname = token.to_s
         opname_int = 'xpath_op_' + opname
@@ -416,6 +420,19 @@ class XpathEngine
     end
 
     # logger.debug "-------------- predicate finished ----------"
+  end
+
+  def evaluate_expr_token_literal(table, value)
+    if @last_key && @attribs[table][@last_key][:split]
+      tvalues = value.split(@attribs[table][@last_key][:split])
+      raise IllegalXpathError, 'attributes must be $NAMESPACE:$NAME' if tvalues.size != 2
+
+      @condition_values_needed.times { @condition_values << tvalues }
+    elsif @last_key && @attribs[table][@last_key][:double]
+      @condition_values_needed.times { @condition_values << [value, value] }
+    else
+      @condition_values_needed.times { @condition_values << value }
+    end
   end
 
   def evaluate_expr(expr, root, escape: false)
@@ -438,16 +455,7 @@ class XpathEngine
         value = (escape ? escape_for_like(expr.shift) : expr.shift)
         return '' if @last_key && @attribs[table][@last_key][:empty]
 
-        if @last_key && @attribs[table][@last_key][:split]
-          tvalues = value.split(@attribs[table][@last_key][:split])
-          raise IllegalXpathError, 'attributes must be $NAMESPACE:$NAME' if tvalues.size != 2
-
-          @condition_values_needed.times { @condition_values << tvalues }
-        elsif @last_key && @attribs[table][@last_key][:double]
-          @condition_values_needed.times { @condition_values << [value, value] }
-        else
-          @condition_values_needed.times { @condition_values << value }
-        end
+        evaluate_expr_token_literal(table, value)
         @last_key = nil
         return '?'
       else
