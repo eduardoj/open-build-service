@@ -33,6 +33,34 @@ class XpathEngine
 
   # Careful: there is no return value, the items found are passed to the calling block
   def find(xpath)
+    extract_stack(xpath)
+
+    @stack.shift
+    @stack.shift
+    tablename = @stack.shift
+    @base_table = @tables[tablename]
+    raise IllegalXpathError, "unknown table #{tablename}" unless @base_table
+
+    parse_stack
+
+    relation, order = extract_relation_joins_order_from_base_table
+    cond_ary = nil
+    cond_ary = [@conditions.flatten.uniq.join(' AND '), @condition_values].flatten if @conditions.count.positive?
+
+    logger.debug("#{relation.to_sql}.find #{{ joins: @joins.flatten.uniq.join(' '),
+                                              conditions: cond_ary }.inspect}")
+    relation = relation.joins(@joins.flatten.uniq.join(' ')).where(cond_ary).order(order)
+    # .distinct is critical for perfomance here...
+    relation.distinct.pluck(:id)
+  end
+
+  private
+
+  def logger
+    Rails.logger
+  end
+
+  def extract_stack(xpath)
     # logger.debug "---------------------- parsing xpath: #{xpath} -----------------------"
 
     begin
@@ -49,13 +77,9 @@ class XpathEngine
     raise IllegalXpathError, 'xpath expression has to begin with root node' if @stack.shift != :document
 
     raise IllegalXpathError, 'xpath expression has to begin with root node' if @stack.shift != :child
+  end
 
-    @stack.shift
-    @stack.shift
-    tablename = @stack.shift
-    @base_table = @tables[tablename]
-    raise IllegalXpathError, "unknown table #{tablename}" unless @base_table
-
+  def parse_stack
     until @stack.empty?
       token = @stack.shift
       # logger.debug "next token: #{token.inspect}"
@@ -79,7 +103,9 @@ class XpathEngine
     end
 
     # logger.debug "-------------------- end parsing xpath: #{xpath} ---------------------"
+  end
 
+  def extract_relation_joins_order_from_base_table
     relation = nil
     order = nil
     case @base_table
@@ -141,20 +167,8 @@ class XpathEngine
     else
       logger.debug "strange base table: #{@base_table}"
     end
-    cond_ary = nil
-    cond_ary = [@conditions.flatten.uniq.join(' AND '), @condition_values].flatten if @conditions.count.positive?
 
-    logger.debug("#{relation.to_sql}.find #{{ joins: @joins.flatten.uniq.join(' '),
-                                              conditions: cond_ary }.inspect}")
-    relation = relation.joins(@joins.flatten.uniq.join(' ')).where(cond_ary).order(order)
-    # .distinct is critical for perfomance here...
-    relation.distinct.pluck(:id)
-  end
-
-  private
-
-  def logger
-    Rails.logger
+    [relation, order]
   end
 
   def parse_predicate_token_child(root, stack)
