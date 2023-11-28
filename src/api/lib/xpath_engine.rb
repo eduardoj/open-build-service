@@ -171,6 +171,14 @@ class XpathEngine
     [relation, order]
   end
 
+  def check_xpath_function(fname, fname_int)
+    raise IllegalXpathError, "unknown xpath function '#{fname}'" unless respond_to?(fname_int, true)
+  end
+
+  def check_xpath_operator(opname, opname_int)
+    raise IllegalXpathError, "unhandled xpath operator '#{opname}'" unless respond_to?(opname_int, true)
+  end
+
   def parse_predicate_token_child(root, stack)
     qtype = stack.shift
     case qtype
@@ -208,7 +216,7 @@ class XpathEngine
       when :function
         fname = stack.shift
         fname_int = 'xpath_func_' + fname.tr('-', '_')
-        raise IllegalXpathError, "unknown xpath function '#{fname}'" unless respond_to?(fname_int, true)
+        check_xpath_function(fname, fname_int)
 
         __send__(fname_int, root, *stack.shift)
       when :child
@@ -216,7 +224,7 @@ class XpathEngine
       when *@operators
         opname = token.to_s
         opname_int = 'xpath_op_' + opname
-        raise IllegalXpathError, "unhandled xpath operator '#{opname}'" unless respond_to?(opname_int, true)
+        check_xpath_operator(opname, opname_int)
 
         __send__(opname_int, root, *stack)
         stack = []
