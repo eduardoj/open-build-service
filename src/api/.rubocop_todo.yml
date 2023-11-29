@@ -430,7 +430,6 @@ Metrics/PerceivedComplexity:
     - 'app/models/user_ldap_strategy.rb'
     - 'app/policies/attrib_policy.rb'
     - 'lib/memory_debugger.rb'
-    - 'lib/xpath_engine.rb'
     - 'script/import_database.rb'
     - 'test/functional/backend_test.rb'
     - 'test/functional/maintenance_test.rb'

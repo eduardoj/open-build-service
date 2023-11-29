@@ -236,21 +236,38 @@ class XpathEngine
     # logger.debug "-------------- predicate finished ----------"
   end
 
-  def evaluate_expr_token_literal(table, value)
-    if @last_key && @attribs[table][@last_key][:split]
-      tvalues = value.split(@attribs[table][@last_key][:split])
+  def evaluate_expr_token_literal_value(value)
+    if @last_key && @attribs[@base_table][@last_key][:split]
+      tvalues = value.split(@attribs[@base_table][@last_key][:split])
       raise IllegalXpathError, 'attributes must be $NAMESPACE:$NAME' if tvalues.size != 2
 
       @condition_values_needed.times { @condition_values << tvalues }
-    elsif @last_key && @attribs[table][@last_key][:double]
+    elsif @last_key && @attribs[@base_table][@last_key][:double]
       @condition_values_needed.times { @condition_values << [value, value] }
     else
       @condition_values_needed.times { @condition_values << value }
     end
   end
 
+  def evaluate_expr_token_literal(expr, escape)
+    value = (escape ? escape_for_like(expr.shift) : expr.shift)
+    return '' if @last_key && @attribs[@base_table][@last_key][:empty]
+
+    evaluate_expr_token_literal_value(value)
+    @last_key = nil
+    '?'
+  end
+
+  def check_key_can_be_evaluated(key)
+    raise IllegalXpathError, "unable to evaluate '#{key}' for '#{@base_table}'" unless @attribs[@base_table] && @attribs[@base_table].key?(key)
+  end
+
+  def joins_and_split(key)
+    @joins << @attribs[@base_table][key][:joins] if @attribs[@base_table][key][:joins]
+    @split = @attribs[@base_table][key][:split] if @attribs[@base_table][key][:split]
+  end
+
   def evaluate_expr(expr, root, escape: false)
-    table = @base_table
     a = []
     until expr.empty?
       token = expr.shift
@@ -266,27 +283,21 @@ class XpathEngine
         expr.shift # namespace
         a << ('@' + expr.shift)
       when :literal
-        value = (escape ? escape_for_like(expr.shift) : expr.shift)
-        return '' if @last_key && @attribs[table][@last_key][:empty]
-
-        evaluate_expr_token_literal(table, value)
-        @last_key = nil
-        return '?'
+        return evaluate_expr_token_literal(expr, escape)
       else
         raise IllegalXpathError, "illegal token: '#{token.inspect}'"
       end
     end
     key = (root + a).join('/')
+    check_key_can_be_evaluated(key)
     # this is a wild hack - we need to save the key, so we can possibly split the next
     # literal. The real fix is to translate the xpath into SQL directly
     @last_key = key
-    raise IllegalXpathError, "unable to evaluate '#{key}' for '#{table}'" unless @attribs[table] && @attribs[table].key?(key)
     # logger.debug "-- found key: #{key} --"
-    return if @attribs[table][key][:empty]
+    return if @attribs[@base_table][key][:empty]
 
-    @joins << @attribs[table][key][:joins] if @attribs[table][key][:joins]
-    @split = @attribs[table][key][:split] if @attribs[table][key][:split]
-    @attribs[table][key][:cpart]
+    joins_and_split(key)
+    @attribs[@base_table][key][:cpart]
   end
 
   def escape_for_like(str)
