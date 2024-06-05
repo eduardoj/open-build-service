@@ -1,6 +1,6 @@
 require 'rantly/rspec_extensions'
 
-RSpec.describe Project, :vcr do
+RSpec.describe Project, vcr: false do
   let!(:project) { create(:project, name: 'openSUSE_41') }
   let(:remote_project) { create(:remote_project, name: 'openSUSE.org') }
   let(:package) { create(:package, project: project) }
@@ -313,7 +313,11 @@ RSpec.describe Project, :vcr do
     shared_examples 'with_open_requests' do
       subject { project.open_requests }
 
-      let(:admin_user) { create(:admin_user, login: 'king') }
+      before do
+        login(user)
+      end
+
+      let(:admin_user) { User.get_default_admin }
       let(:confirmed_user) { create(:confirmed_user, login: 'confirmed_user') }
       let(:source_package) { create(:package, :as_submission_source) }
 
@@ -413,7 +417,7 @@ RSpec.describe Project, :vcr do
   end
 
   describe '.restore' do
-    let(:admin_user) { create(:admin_user, login: 'Admin') }
+    let!(:admin_user) { User.get_default_admin }
     let(:deleted_project) do
       create(:project_with_packages,
              name: 'project_used_for_restoration',
@@ -485,7 +489,7 @@ RSpec.describe Project, :vcr do
 
   describe '#destroy' do
     context 'avoid regressions of the issue #3665' do
-      let(:admin_user) { create(:admin_user, login: 'Admin') }
+      let(:admin_user) { User.get_default_admin }
       let(:images_repository) { create(:repository, name: 'images', project: project) }
       let(:apache_repository) { create(:repository, name: 'Apache', project: project) }
       let!(:path_element) { create(:path_element, parent_id: images_repository.id, repository_id: apache_repository.id, position: 1) }
@@ -688,6 +692,7 @@ RSpec.describe Project, :vcr do
       end
 
       before do
+        login(User.get_default_admin)
         AttribValue.create!(attrib: attrib, value: 'Test')
         AttribValue.create!(attrib: attrib, value: 'Private')
       end
@@ -713,6 +718,10 @@ RSpec.describe Project, :vcr do
     let(:attrib_namespace) { AttribNamespace.create!(name: 'OBS') }
 
     context 'when there are Very Important Projects' do
+      before do
+        login(User.get_default_admin)
+      end
+
       context 'with quality categories' do
         let(:vip_attrib_type) do
           AttribType.create!(name: 'VeryImportantProject',
@@ -763,6 +772,10 @@ RSpec.describe Project, :vcr do
 
   describe '#expand_maintained_projects' do
     subject { maintenance_project.expand_maintained_projects }
+
+    before do
+      login(user)
+    end
 
     let(:link_target_project) { create(:project, name: 'openSUSE:Maintenance') }
     let(:maintenance_project) { create(:maintenance_project, target_project: link_target_project) }

@@ -224,10 +224,11 @@ class User < ApplicationRecord
   end
 
   def self.find_nobody!
-    User.create_with(email: 'nobody@localhost',
-                     realname: 'Anonymous User',
-                     state: 'locked',
-                     password: '123456').find_or_create_by(login: NOBODY_LOGIN)
+    # User.create_with(email: 'nobody@localhost',
+    #                  realname: 'Anonymous User',
+    #                  state: 'locked',
+    #                  password: '123456').find_or_create_by(login: NOBODY_LOGIN)
+    User.find_by(login: NOBODY_LOGIN)
   end
 
   def self.find_by_login!(login)

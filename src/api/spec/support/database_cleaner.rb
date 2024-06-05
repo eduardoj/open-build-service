@@ -2,7 +2,7 @@ require 'database_cleaner/active_record'
 
 RSpec.configure do |config|
   STATIC_TABLES = %w[roles roles_static_permissions static_permissions configurations
-                     architectures issue_trackers
+                     architectures issue_trackers users roles_users
                      attrib_namespaces attrib_namespace_modifiable_bies attrib_types attrib_allowed_values].freeze
 
   # We are using factory_bot to set up everything the test needs up front,
