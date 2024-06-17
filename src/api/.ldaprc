@@ -1,0 +1,3 @@
+HOST openldap
+PORT 636
+TLS_REQCERT ALLOW

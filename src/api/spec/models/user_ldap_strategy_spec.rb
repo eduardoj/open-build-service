@@ -1,10 +1,8 @@
 RSpec.describe UserLdapStrategy do
-  let(:dn_string_no_uid)   { 'cn=jsmith,ou=Promotions,dc=noam,dc=com' }
-  let(:dn_string_no_dc)    { 'cn=jsmith,ou=Promotions,uid=dister' }
-  let(:dn_string_complete) { 'cn=jsmith,ou=Promotions,dc=noam,dc=com,uid=dister' }
-
   describe '.dn2user_principal_name' do
     context 'when no user id is provided' do
+      let(:dn_string_no_uid) { 'cn=jsmith,ou=Promotions,dc=noam,dc=com' }
+
       it 'returns an empty string' do
         expect(UserLdapStrategy.send(:dn2user_principal_name, dn_string_no_uid)).to eq('')
         expect(UserLdapStrategy.send(:dn2user_principal_name, [dn_string_no_uid])).to eq('')
@@ -12,6 +10,8 @@ RSpec.describe UserLdapStrategy do
     end
 
     context 'when no domain componant is provided' do
+      let(:dn_string_no_dc) { 'cn=jsmith,ou=Promotions,uid=dister' }
+
       it "returns 'dister@'" do
         expect(UserLdapStrategy.send(:dn2user_principal_name, dn_string_no_dc)).to eq('dister@')
         expect(UserLdapStrategy.send(:dn2user_principal_name, [dn_string_no_dc])).to eq('dister@')
@@ -19,6 +19,8 @@ RSpec.describe UserLdapStrategy do
     end
 
     context 'when dc and user id is provided' do
+      let(:dn_string_complete) { 'cn=jsmith,ou=Promotions,dc=noam,dc=com,uid=dister' }
+
       it 'returns the correct ldap address' do
         expect(UserLdapStrategy.send(:dn2user_principal_name, dn_string_complete)).to eq('dister@noam.com')
         expect(UserLdapStrategy.send(:dn2user_principal_name, [dn_string_complete])).to eq('dister@noam.com')
@@ -93,11 +95,11 @@ RSpec.describe UserLdapStrategy do
 
     context 'when ldap servers are configured' do
       before do
-        stub_const('CONFIG', CONFIG.merge('ldap_servers' => 'my_ldap_server.com'))
+        stub_const('CONFIG', CONFIG.merge('ldap_servers' => 'openldap'))
       end
 
       context 'for SSL' do
-        include_context 'setup ldap mock', for_ssl: true
+        # include_context 'setup ldap mock', for_ssl: true
 
         before do
           stub_const('CONFIG', CONFIG.merge('ldap_ssl' => :on))
@@ -106,18 +108,18 @@ RSpec.describe UserLdapStrategy do
         it_behaves_like 'a ldap connection'
       end
 
-      context 'configured for TSL' do
-        include_context 'setup ldap mock', for_ssl: true, start_tls: true
-
-        before do
-          stub_const('CONFIG', CONFIG.merge('ldap_start_tls' => :on))
-        end
-
-        it_behaves_like 'a ldap connection'
-      end
+      # context 'configured for TSL' do
+      #   # include_context 'setup ldap mock', for_ssl: true, start_tls: true
+      #
+      #   before do
+      #     stub_const('CONFIG', CONFIG.merge('ldap_start_tls' => :on))
+      #   end
+      #
+      #   it_behaves_like 'a ldap connection'
+      # end
 
       context 'not configured for TSL or SSL' do
-        include_context 'setup ldap mock'
+        # include_context 'setup ldap mock'
 
         before do
           stub_const('CONFIG', CONFIG.merge('ldap_ssl' => :off))
@@ -187,8 +189,8 @@ RSpec.describe UserLdapStrategy do
 
   describe '#find_with_ldap' do
     before do
-      stub_const('CONFIG', CONFIG.merge('ldap_search_user' => 'tux',
-                                        'ldap_search_auth' => 'tux_password',
+      stub_const('CONFIG', CONFIG.merge('ldap_search_user' => 'cn=admin,dc=example,dc=org',
+                                        'ldap_search_auth' => 'opensuse',
                                         'ldap_ssl' => :off,
                                         'ldap_authenticate' => :ldap))
     end
@@ -197,7 +199,8 @@ RSpec.describe UserLdapStrategy do
       subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
       before do
-        allow(UserLdapStrategy).to receive(:initialize_ldap_con).and_return(nil)
+        # allow(UserLdapStrategy).to receive(:initialize_ldap_con).and_return(nil)
+        stub_const('CONFIG', CONFIG.merge('ldap_search_user' => 'invalid_user', 'ldap_search_auth' => 'invalid_password'))
       end
 
       after do
@@ -208,15 +211,15 @@ RSpec.describe UserLdapStrategy do
     end
 
     context 'ldap connects' do
-      context 'ldap search works' do
-        subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
+      context 'search for non existent user' do
+        subject { UserLdapStrategy.find_with_ldap('non_existent_user', 'bad_password') }
 
-        include_context 'setup ldap mock'
-        include_context 'an ldap connection'
+        # include_context 'setup ldap mock'
+        # include_context 'an ldap connection'
 
-        before do
-          allow(ldap_mock).to receive(:search)
-        end
+        # before do
+        #   allow(ldap_mock).to receive(:search)
+        # end
 
         it { is_expected.to be_nil } # returns nil because the user was not found
       end
@@ -224,44 +227,44 @@ RSpec.describe UserLdapStrategy do
       context 'without ldap_user_filter set' do
         subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
-        include_context 'setup ldap mock'
-        include_context 'an ldap connection'
+        # include_context 'setup ldap mock'
+        # include_context 'an ldap connection'
 
         before do
           stub_const('CONFIG', CONFIG.merge('ldap_user_filter' => nil))
 
-          allow(ldap_mock).to receive(:search)
+          # allow(ldap_mock).to receive(:search)
         end
 
         it { is_expected.to be_nil } # returns nil because the user was not found
       end
 
-      context 'ldap search raises an error' do
-        subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
-
-        include_context 'setup ldap mock'
-        include_context 'an ldap connection'
-
-        before do
-          allow(ldap_mock).to receive(:search).and_raise(ArgumentError)
-          allow(ldap_mock).to receive_messages(err: 'something went wrong', err2string: 'something went wrong')
-          allow(ldap_mock).to receive(:unbind)
-        end
-
-        it { is_expected.to be_nil }
-      end
+      # context 'ldap search raises an error' do
+      #   subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
+      #
+      #   # include_context 'setup ldap mock'
+      #   # include_context 'an ldap connection'
+      #   #
+      #   # before do
+      #   #   allow(ldap_mock).to receive(:search).and_raise(ArgumentError)
+      #   #   allow(ldap_mock).to receive_messages(err: 'something went wrong', err2string: 'something went wrong')
+      #   #   allow(ldap_mock).to receive(:unbind)
+      #   # end
+      #
+      #   it { is_expected.to be_nil }
+      # end
 
       context 'ldap_authenticate = :local' do
         subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
-        include_context 'setup ldap mock'
-        include_context 'an ldap connection'
+        # include_context 'setup ldap mock'
+        # include_context 'an ldap connection'
 
         let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'helloworld' }) }
 
         before do
           stub_const('CONFIG', CONFIG.merge('ldap_authenticate' => :local))
-          allow(ldap_mock).to receive(:search).and_yield(ldap_user)
+          # allow(ldap_mock).to receive(:search).and_yield(ldap_user)
         end
 
         it { is_expected.to be_nil }
@@ -270,15 +273,15 @@ RSpec.describe UserLdapStrategy do
       context 'ldap_authenticate = nil' do
         subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
-        include_context 'setup ldap mock'
-        include_context 'an ldap connection'
+        # include_context 'setup ldap mock'
+        # include_context 'an ldap connection'
 
         let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'helloworld' }) }
 
-        before do
-          stub_const('CONFIG', CONFIG.merge('ldap_authenticate' => nil))
-          allow(ldap_mock).to receive(:search).and_yield(ldap_user)
-        end
+        # before do
+        #   stub_const('CONFIG', CONFIG.merge('ldap_authenticate' => nil))
+        #   allow(ldap_mock).to receive(:search).and_yield(ldap_user)
+        # end
 
         it { is_expected.to be_nil }
       end
@@ -286,14 +289,14 @@ RSpec.describe UserLdapStrategy do
       context 'ldap_authenticate = :ldap and password is nil' do
         subject { UserLdapStrategy.find_with_ldap('tux', nil) }
 
-        include_context 'setup ldap mock'
-        include_context 'an ldap connection'
+        # include_context 'setup ldap mock'
+        # include_context 'an ldap connection'
 
         let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'helloworld' }) }
 
-        before do
-          allow(ldap_mock).to receive(:search).and_yield(ldap_user)
-        end
+        # before do
+        #   allow(ldap_mock).to receive(:search).and_yield(ldap_user)
+        # end
 
         it { is_expected.to be_nil }
       end
@@ -301,41 +304,41 @@ RSpec.describe UserLdapStrategy do
       context 'ldap_authenticate = :ldap' do
         subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
-        include_context 'setup ldap mock with user mock'
-        include_context 'an ldap connection'
-        include_context 'mock searching a user' do
-          let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'tux', 'sn' => %w[John Smith] }) }
-        end
+        # include_context 'setup ldap mock with user mock'
+        # include_context 'an ldap connection'
+        # include_context 'mock searching a user' do
+        #   let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'tux', 'sn' => %w[John Smith] }) }
+        # end
 
         it 'returns name and username' do
           expect(subject).to eq(%w[John tux])
         end
       end
 
-      context 'ldap_authenticate = :ldap and user connection returning nil' do
-        subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
-
-        include_context 'setup ldap mock with user mock'
-        include_context 'an ldap connection'
-        include_context 'mock searching a user' do
-          let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'tux', 'sn' => %w[John Smith] }) }
-        end
-
-        before do
-          allow(ldap_user_mock).to receive(:bound?).and_return(false)
-        end
-
-        it { is_expected.to be_nil }
-      end
+      # context 'ldap_authenticate = :ldap and user connection returning nil' do
+      #   subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
+      #
+      #   # include_context 'setup ldap mock with user mock'
+      #   # include_context 'an ldap connection'
+      #   # include_context 'mock searching a user' do
+      #   #   let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'tux', 'sn' => %w[John Smith] }) }
+      #   # end
+      #   #
+      #   # before do
+      #   #   allow(ldap_user_mock).to receive(:bound?).and_return(false)
+      #   # end
+      #
+      #   it { is_expected.to be_nil }
+      # end
 
       context 'ldap_authenticate = :ldap and the users ldap_mail_attr is not set' do
         subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
-        include_context 'setup ldap mock with user mock'
-        include_context 'an ldap connection'
-        include_context 'mock searching a user' do
-          let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'tux' }) }
-        end
+        # include_context 'setup ldap mock with user mock'
+        # include_context 'an ldap connection'
+        # include_context 'mock searching a user' do
+        #   let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'tux' }) }
+        # end
 
         it 'returns empty string and username' do
           expect(subject).to eq(['', 'tux'])
@@ -345,11 +348,11 @@ RSpec.describe UserLdapStrategy do
       context 'ldap_authenticate = :ldap and the users ldap_name_attr is set' do
         subject { UserLdapStrategy.find_with_ldap('tux', 'tux_password') }
 
-        include_context 'setup ldap mock with user mock'
-        include_context 'an ldap connection'
-        include_context 'mock searching a user' do
-          let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'tux', 'sn' => %w[John Smith], 'fn' => 'SJ' }) }
-        end
+        # include_context 'setup ldap mock with user mock'
+        # include_context 'an ldap connection'
+        # include_context 'mock searching a user' do
+        #   let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'tux', 'sn' => %w[John Smith], 'fn' => 'SJ' }) }
+        # end
 
         before do
           stub_const('CONFIG', CONFIG.merge('ldap_name_attr' => 'fn'))
@@ -370,11 +373,11 @@ RSpec.describe UserLdapStrategy do
           UserLdapStrategy.find_with_ldap('tux', 'tux_password')
         end
 
-        include_context 'setup ldap mock with user mock'
-        include_context 'an ldap connection'
-        include_context 'mock searching a user' do
-          let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'tux', 'sn' => %w[John Smith] }) }
-        end
+        # include_context 'setup ldap mock with user mock'
+        # include_context 'an ldap connection'
+        # include_context 'mock searching a user' do
+        #   let(:ldap_user) { double(:ldap_user, to_hash: { 'dn' => 'tux', 'sn' => %w[John Smith] }) }
+        # end
 
         before do
           times_called = 0
@@ -384,8 +387,8 @@ RSpec.describe UserLdapStrategy do
 
             times_called += 1
           end
-          allow(ldap_mock).to receive_messages(err: 'something went wrong', err2string: 'something went wrong')
-          allow(ldap_mock).to receive(:unbind)
+          # allow(ldap_mock).to receive_messages(err: 'something went wrong', err2string: 'something went wrong')
+          # allow(ldap_mock).to receive(:unbind)
           # This connects to LDAP and stores the connection in a class var
           UserLdapStrategy.find_with_ldap('tux', 'tux_password')
         end

@@ -44,6 +44,7 @@ class UserLdapStrategy
       # TODO: This should be refactored
       # rubocop:disable Lint/UselessTimes
       1.times do
+        binding.pry
         @@ldap_search_con = initialize_ldap_con(CONFIG['ldap_search_user'], CONFIG['ldap_search_auth']) if @@ldap_search_con.nil?
         ldap_con = @@ldap_search_con
         if ldap_con.nil?
@@ -159,12 +160,13 @@ class UserLdapStrategy
 
       # Do 10 attempts to connect to one of the configured LDAP servers. LDAP server
       # to connect to is chosen randomly.
-      (CONFIG['ldap_max_attempts'] || 10).times do
+      # (CONFIG['ldap_max_attempts'] || 10).times do
+      # 1.times do
         server = ldap_servers[rand(ldap_servers.length)]
         con = try_ldap_con(server, user_name, password)
 
         return con if con.try(:bound?)
-      end
+      # end
 
       Rails.logger.error("UserLdapStrategy:: Unable to bind to any of the servers '#{CONFIG['ldap_servers']}'")
       nil
@@ -185,6 +187,8 @@ class UserLdapStrategy
               end
         con.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
         con.set_option(LDAP::LDAP_OPT_REFERRALS, LDAP::LDAP_OPT_OFF) if CONFIG['ldap_referrals'] == :off
+        # con.set_option(LDAP::LDAP_OPT_X_TLS_REQUIRE_CERT, LDAP::LDAP_OPT_X_TLS_ALLOW)
+
         con.bind(user_name, password)
       rescue LDAP::ResultError
         con.unbind if con.try(:bound?)
