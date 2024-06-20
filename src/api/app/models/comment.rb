@@ -5,6 +5,12 @@ class Comment < ApplicationRecord
   belongs_to :user, inverse_of: :comments
   belongs_to :moderator, class_name: 'User', optional: true
 
+  belongs_to :bs_request, foreign_key: 'commentable_id'
+  belongs_to :bs_request_action, foreign_key: 'commentable_id'
+  belongs_to :package, foreign_key: 'commentable_id'
+  belongs_to :project, foreign_key: 'commentable_id'
+  belongs_to :report, foreign_key: 'commentable_id'
+
   validates :body, presence: true
   # FIXME: this probably should be MEDIUMTEXT(16MB) instead of text (64KB)
   validates :body, length: { maximum: 65_535 }
@@ -30,7 +36,7 @@ class Comment < ApplicationRecord
 
   scope :on_actions_for_request, ->(bs_request) { where(commentable: BsRequestAction.where(bs_request: bs_request)) }
   scope :without_parent, -> { where(parent_id: nil) }
-  scope :with_commentable, -> { where.not(commentable_id: nil) }
+  scope :with_commentable, -> { includes(:bs_request, :bs_request_action, :package, :project, :report).where.not(commentable_id: nil) }
   scope :newest_first, -> { order(created_at: :desc) }
 
   def to_s
