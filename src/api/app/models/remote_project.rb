@@ -15,6 +15,7 @@ end
 # Table name: projects
 #
 #  id                  :integer          not null, primary key
+#  contribution_guide  :text(65535)
 #  delta               :boolean          default(TRUE), not null
 #  description         :text(65535)
 #  kind                :string           default("standard")

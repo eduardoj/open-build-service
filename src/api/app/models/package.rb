@@ -101,7 +101,7 @@ class Package < ApplicationRecord
   validates :releasename, length: { maximum: 200 }
   validates :title, length: { maximum: 250 }
   validates :url, length: { maximum: 255 }
-  validates :description, :report_bug_url, length: { maximum: 65_535 }
+  validates :contribution_guide, :description, :report_bug_url, length: { maximum: 65_535 }
   validates :project_id, uniqueness: {
     scope: :name,
     message: lambda do |object, _data|
@@ -1381,22 +1381,23 @@ end
 #
 # Table name: packages
 #
-#  id              :integer          not null, primary key
-#  activity_index  :float(24)        default(100.0)
-#  bcntsynctag     :string(255)
-#  delta           :boolean          default(TRUE), not null
-#  description     :text(65535)
-#  name            :string(200)      not null, indexed => [project_id]
-#  releasename     :string(255)
-#  report_bug_url  :text(65535)
-#  scmsync         :string(255)
-#  title           :string(255)
-#  url             :string(255)
-#  created_at      :datetime
-#  updated_at      :datetime
-#  develpackage_id :integer          indexed
-#  kiwi_image_id   :integer          indexed
-#  project_id      :integer          not null, indexed => [name]
+#  id                 :integer          not null, primary key
+#  activity_index     :float(24)        default(100.0)
+#  bcntsynctag        :string(255)
+#  contribution_guide :text(65535)
+#  delta              :boolean          default(TRUE), not null
+#  description        :text(65535)
+#  name               :string(200)      not null, indexed => [project_id]
+#  releasename        :string(255)
+#  report_bug_url     :text(65535)
+#  scmsync            :string(255)
+#  title              :string(255)
+#  url                :string(255)
+#  created_at         :datetime
+#  updated_at         :datetime
+#  develpackage_id    :integer          indexed
+#  kiwi_image_id      :integer          indexed
+#  project_id         :integer          not null, indexed => [name]
 #
 # Indexes
 #
