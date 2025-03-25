@@ -281,8 +281,8 @@ class Package < ApplicationRecord
     false
   end
 
-  def self.find_by_project_and_name(project, package)
-    PackagesFinder.new.by_package_and_project(package, project).first
+  def self.find_by_project_and_name(project_name, package_name)
+    Package.where(name: package_name, projects: { name: project_name }).includes(:project).first
   end
 
   def meta

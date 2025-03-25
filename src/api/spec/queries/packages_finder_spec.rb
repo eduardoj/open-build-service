@@ -1,21 +1,4 @@
 RSpec.describe PackagesFinder, :vcr do
-  describe '#by_package_and_project' do
-    let(:project) { create(:project, name: 'foo') }
-    let!(:package) { create(:package, name: 'foo_pack', project: project) }
-
-    context 'package and project exist' do
-      subject { PackagesFinder.new.by_package_and_project(package.name, project.name) }
-
-      it { expect(subject).not_to be_empty }
-    end
-
-    context 'package or project doesn\'t exist' do
-      subject { PackagesFinder.new.by_package_and_project('foo_pack', 'fooa') }
-
-      it { expect(subject).to be_empty }
-    end
-  end
-
   describe '#find_by_attribute_type' do
     let(:admin_user) { create(:admin_user, login: 'superbad') }
     let(:project) { create(:project, name: 'foo') }

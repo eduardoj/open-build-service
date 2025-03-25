@@ -3,10 +3,6 @@ class PackagesFinder
     @relation = relation
   end
 
-  def by_package_and_project(package, project)
-    @relation.where(name: package, projects: { name: project }).includes(:project)
-  end
-
   def find_by_attribute_type(attrib_type, package = nil)
     # One sql statement is faster than a ruby loop
     # attribute match in package or project
