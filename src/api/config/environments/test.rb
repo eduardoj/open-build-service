@@ -58,3 +58,7 @@ Rails.application.configure do
   # Annotate rendered view with file names.
   # config.action_view.annotate_rendered_view_with_filenames = true
 end
+
+# the default is not to write through, only once the backend started
+# we set this to true
+CONFIG['global_write_through'] = false
