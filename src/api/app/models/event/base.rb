@@ -16,13 +16,24 @@ module Event
       @receiver_roles = nil
       @shortenable_key = nil
 
+      # def notification_events
+      #   [Event::BuildFail, Event::ServiceFail, Event::ReviewWanted, Event::RequestCreate,
+      #    Event::RequestStatechange, Event::CommentForProject, Event::CommentForPackage,
+      #    Event::CommentForRequest,
+      #    Event::RelationshipCreate, Event::RelationshipDelete,
+      #    Event::ReportForComment, Event::ReportForPackage, Event::ReportForProject, Event::ReportForUser, Event::ReportForRequest,
+      #    Event::WorkflowRunFail, Event::AppealCreated, Event::ClearedDecision, Event::FavoredDecision,
+      #    Event::AddedUserToGroup, Event::RemovedUserFromGroup]
+      # end
+
       def notification_events
         [Event::BuildFail, Event::ServiceFail, Event::ReviewWanted, Event::RequestCreate,
          Event::RequestStatechange, Event::CommentForProject, Event::CommentForPackage,
          Event::CommentForRequest,
          Event::RelationshipCreate, Event::RelationshipDelete,
-         Event::ReportForComment, Event::ReportForPackage, Event::ReportForProject, Event::ReportForUser, Event::ReportForRequest,
-         Event::WorkflowRunFail, Event::AppealCreated, Event::ClearedDecision, Event::FavoredDecision,
+         Event::Report,
+         Event::Decision,
+         Event::WorkflowRunFail, Event::AppealCreated,
          Event::AddedUserToGroup, Event::RemovedUserFromGroup]
       end
 

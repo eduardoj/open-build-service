@@ -2,6 +2,8 @@ module Event
   class Decision < Base
     self.abstract_class = true
     payload_keys :id, :reason, :moderator_id, :report_last_id, :reportable_type
+    self.description = 'Decision...'
+
 
     def parameters_for_notification
       super.merge(notifiable_type: 'Decision', type: 'NotificationReport')
