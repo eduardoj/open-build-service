@@ -48,25 +48,17 @@ namespace :dev do
 
     database_exists = false
 
-    # since Rails 7.2 `Rake::Task['db:version'].invoke` does not raise exception anymore if the database does not exist.
-    # So we need to check if the database exists before running the task.
+    puts 'Checking if database exists...'
     if RailsVersion.is_7_2?
-      if ActiveRecord::Base.connection.database_exists?
-        puts 'Checking database...'
-        Rake::Task['db:version'].invoke
-        puts 'Database version is ok'
-        database_exists = true
-      else
-        database_exists = false
-      end
+      # Since Rails 7.2 `Rake::Task['db:version'].invoke` does not raise exception anymore if the database does not exist.
+      # So we need to check if the database exists before running the task.
+      database_exists = true if ActiveRecord::Base.connection.database_exists?
     else
       begin
-        puts 'Checking database...'
         Rake::Task['db:version'].invoke
-        puts 'Database version is ok'
         database_exists = true
       rescue StandardError
-        database_exists = false
+        nil
       end
     end
 
