@@ -11,7 +11,7 @@
                                                                 value: params[:search_text],
                                                                 html_name: 'search_text', required: true,
                                                                 minlength: 2, autofocus: true,
-                                                                button: { type: 'submit', class: 'btn-primary' } }
+                                                                button: { type: 'submit' } }
         = render(partial: 'search_for')
         = render(partial: 'advanced_search', locals: { attrib_type_list: @attrib_type_list,
                                                          issue_tracker_list: @issue_tracker_list,
