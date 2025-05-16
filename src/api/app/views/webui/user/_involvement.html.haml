@@ -17,7 +17,7 @@
     .card-body
       = form_with(model: displayed_user, method: :get, local: true, class: 'row row-cols-auto justify-content-end') do
         .mb-3
-          = render partial: 'webui/shared/search_box', locals: { html_id: 'search_text',
+          = render partial: 'webui/shared/search_box', locals: { html_id: 'search_text', button: { class: 'btn-outline-secondary' },
                                                                  value: filters[:search_text],
                                                                  required: false }
         %span.dropdown.mb-3#involved-project-package
@@ -55,7 +55,7 @@
                   %label.form-check-label{ for: role_html_id }
                     = role.to_s.capitalize
         .mb-3
-          %button.btn.btn-primary.form-control#filter-button{ type: :submit }
+          %button.btn.btn-secondary.form-control#filter-button{ type: :submit }
             Apply Filter
 
     - if display_filters?(filters.keys)
