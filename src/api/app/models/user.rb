@@ -109,7 +109,6 @@ class User < ApplicationRecord
 
   validates :state, inclusion: { in: STATES }
   validates :old_password_digest, length: { maximum: 255 }
-  validates :password_digest, length: { maximum: 255 }
 
   validate :validate_state
 
@@ -911,7 +910,6 @@ end
 #  login                         :text(65535)      indexed
 #  login_failure_count           :integer          default(0), not null
 #  old_password_digest           :string(255)
-#  password_digest               :string(255)
 #  realname                      :string(200)      default(""), not null
 #  rss_secret                    :string(200)      indexed
 #  state                         :string           default("unconfirmed"), indexed
