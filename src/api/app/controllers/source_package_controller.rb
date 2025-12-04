@@ -106,8 +106,10 @@ class SourcePackageController < SourceController
 
     Package.verify_file!(@pack, params[:filename], request.raw_post)
 
-    @path += build_query_from_hash(params, %i[user comment rev keeplink meta])
-    pass_to_backend(@path)
+    backend_params = { user: User.session!.login }
+    backend_params.merge!(params.slice(*%i[rev meta deleted limit expand view]).permit!.to_h)
+
+    Backend::Api::Sources::File.write(@project_name, @package_name, @file, request.body, backend_params)
 
     # update package timestamp and reindex sources
     return if params[:rev] == 'repository' || @package_name.in?(%w[_project _pattern])
@@ -147,7 +149,6 @@ class SourcePackageController < SourceController
     @project_name = params[:project]
     @package_name = params[:package]
     @file = params[:filename]
-    @path = Package.source_path(@project_name, @package_name, @file)
 
     # authenticate
     params[:user] = User.session.login
