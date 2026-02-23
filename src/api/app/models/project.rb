@@ -382,6 +382,22 @@ class Project < ApplicationRecord
         [p.name, p.title, p.categories]
       end
     end
+
+    def values_for_anitya_distributions
+      distributions = Rails.cache.read('anitya_distributions')
+      return distributions[:names] if distributions.present? && distributions[:created_at] > 12.hours.ago
+
+      url = URI('https://release-monitoring.org/api/distro/names')
+      begin
+        response = Net::HTTP.get(url)
+        results = JSON.parse(response)['distro'].sort
+        Rails.cache.write('anitya_distributions', { names: results, created_at: Time.current })
+
+        results
+      rescue StandardError
+        distributions.present? ? distributions[:names] : []
+      end
+    end
     # class_methods
   end
 
