@@ -27,6 +27,10 @@ module Event
          Event::Assignment, Event::UpstreamPackageVersionChanged]
       end
 
+      def notification_feature_flag
+        nil
+      end
+
       def classnames
         @classnames || [name]
       end
@@ -210,6 +214,23 @@ module Event
       Rails.logger.debug { "Maintainers #{payload.inspect}" }
       ret = _roles('maintainer', payload['project'], payload['package'])
       Rails.logger.debug { "Maintainers ret #{ret.inspect}" }
+      ret
+    end
+
+    # Returns the maintainers of the develpackage associated to the given package if there are any.
+    # Otherwise, it returns the maintainers of the given package.
+    def develpackage_or_package_maintainers
+      package = Package.get_by_project_and_name(payload['project'], payload['package'])
+      develpackage = package.develpackage
+      develproject = package.develpackage&.project
+
+      Rails.logger.debug { "Develpackage maintainers or maintainers #{payload.inspect}" }
+      ret = if develpackage
+              _roles('maintainer', develproject.name, develpackage.name)
+            else
+              _roles('maintainer', payload['project'], payload['package'])
+            end
+      Rails.logger.debug { "Develpackage maintainers or maintainers #{ret.inspect}" }
       ret
     end
 
