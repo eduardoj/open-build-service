@@ -27,7 +27,7 @@ class Webui::ProjectController < Webui::WebuiController
   before_action :check_ajax, only: %i[buildresult edit_comment_form]
 
   after_action :verify_authorized, except: %i[index autocomplete_projects autocomplete_staging_projects
-                                              autocomplete_incidents autocomplete_packages
+                                              autocomplete_incidents autocomplete_packages autocomplete_anitya_distributions
                                               autocomplete_repositories users subprojects new show
                                               buildresult requests monitor new_release_request
                                               remove_target_request edit_comment edit_comment_form preview_description]
@@ -157,6 +157,14 @@ class Webui::ProjectController < Webui::WebuiController
 
   def autocomplete_repositories
     render json: @project.repositories.order(:name).pluck(:name)
+  end
+
+  def autocomplete_anitya_distributions
+    search_term = params[:term].downcase
+    results = Project.values_for_anitya_distributions.compact.select do |dist|
+      dist.downcase.include?(search_term)
+    end
+    render json: results
   end
 
   def users
