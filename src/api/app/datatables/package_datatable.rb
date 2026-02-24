@@ -1,5 +1,5 @@
 # NOTE: Folowing: https://github.com/jbox-web/ajax-datatables-rails#using-view-helpers
-class PackageDatatable < Datatable
+class PackageDatatable < Datatable # rubocop:disable Metrics/ClassLength
   include Webui::PackageHelper
 
   def_delegator :@view, :link_to
@@ -33,7 +33,27 @@ class PackageDatatable < Datatable
   def get_raw_records
     query = @project.packages.includes(:package_kinds).left_joins(labels: [:label_template]).references(:labels, :label_template)
 
-    query = query.left_joins(:latest_local_version, :latest_upstream_version) if show_version_column?
+    if show_version_column?
+      local_version_join = <<~SQL.squish
+        LEFT JOIN package_versions ON package_versions.id = (
+          SELECT id FROM package_versions AS pv_local
+          WHERE pv_local.package_id = packages.id AND pv_local.type = 'PackageVersionLocal'
+          ORDER BY pv_local.updated_at DESC
+          LIMIT 1
+        )
+      SQL
+
+      upstream_version_join = <<~SQL.squish
+        LEFT JOIN package_versions AS latest_upstream_versions_packages ON latest_upstream_versions_packages.id = (
+          SELECT id FROM package_versions AS pv_upstream
+          WHERE pv_upstream.package_id = packages.id AND pv_upstream.type = 'PackageVersionUpstream'
+          ORDER BY pv_upstream.updated_at DESC
+          LIMIT 1
+        )
+      SQL
+
+      query = query.joins(local_version_join).joins(upstream_version_join)
+    end
 
     query
   end
