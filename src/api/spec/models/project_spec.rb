@@ -762,6 +762,45 @@ RSpec.describe Project, :vcr do
     end
   end
 
+  describe '#values_for_anitya_distributions' do
+    let(:api_url) { 'https://release-monitoring.org/api/distro/names' }
+    let(:distro_names) { { 'distro' => %w[Arch Fedora openSUSE] } }
+
+    before do
+      Rails.cache.clear
+    end
+
+    context 'when cache is fresh (less than 12 hours old)' do
+      it 'returns cached names and does not call the API' do
+        Rails.cache.write('anitya_distributions', { names: ['openSUSE'], created_at: 1.hour.ago })
+        expect(Project.values_for_anitya_distributions).to eq(['openSUSE'])
+      end
+    end
+
+    context 'when cache is stale (older than 12 hours)' do
+      it 'fetches new data from the API and updates the cache' do
+        Rails.cache.write('anitya_distributions', { names: ['OldDistro'], created_at: 13.hours.ago })
+        stub_request(:get, api_url).to_return(body: distro_names.to_json)
+
+        expect(Project.values_for_anitya_distributions).to eq(%w[Arch Fedora openSUSE])
+      end
+    end
+
+    context 'when the API call fails' do
+      it 'falls back to the stale cache data' do
+        Rails.cache.write('anitya_distributions', { names: ['OldDistro'], created_at: 13.hours.ago })
+        stub_request(:get, api_url).to_return(status: 500)
+
+        expect(Project.values_for_anitya_distributions).to eq(['OldDistro'])
+      end
+
+      it 'returns an empty array if no cache exists and API fails' do
+        stub_request(:get, api_url).to_timeout
+        expect(Project.values_for_anitya_distributions).to eq([])
+      end
+    end
+  end
+
   describe '#expand_maintained_projects' do
     subject { maintenance_project.expand_maintained_projects }
 

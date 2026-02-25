@@ -387,4 +387,71 @@ http_interactions:
 
 '
   recorded_at: Wed, 11 Feb 2026 11:59:09 GMT
+- request:
+    method: get
+    uri: https://release-monitoring.org/api/distro/names
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+      Host:
+      - release-monitoring.org
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Tue, 24 Feb 2026 09:27:21 GMT
+      Server:
+      - Apache/2.4.66 (Fedora Linux) mod_wsgi/5.0.2 Python/3.13
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Apptime:
+      - D=8689
+      Content-Length:
+      - '1411'
+      Content-Type:
+      - application/json
+      Referrer-Policy:
+      - same-origin
+      Vary:
+      - Cookie
+      X-Content-Type-Options:
+      - nosniff
+      X-Fedora-Proxyserver:
+      - proxy01.rdu3.fedoraproject.org
+      X-Fedora-Requestid:
+      - aZ1u-bweSWhyAZi8OtgbUwAADpc
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Xss-Protection:
+      - 1; mode=block
+      Set-Cookie:
+      - c7f2af7958ac7bdd3fe2e687de986bfb=c57bf8372dfed5f97262b0eacda84797; path=/;
+        HttpOnly; Secure; SameSite=None
+    body:
+      encoding: UTF-8
+      string: '{"distro":["Ad\u00e9lie Linux","AerynOS","AlmaLinux","alpine","Alpine","ALT","Amazon
+        Linux","anolis","AOSC OS","Arch Linux","Arch Linux AUR","Arch Linux RISC-V","(Beyond)
+        Linux From Scratch","Bootstrapper","Buildroot","Centos","CentOS","cheese","Chimera
+        Linux","Chromebrew","Clear Linux","Cokybit ","Conda","COPR","CPE NVD NIST","CRUX","Cygwin","Debian","deepin","Devuan","Docker","DragonFly
+        BSD","Endless OS","F-Droid","Fedora","Fedora EPEL","Flathub","foobar","FreeBSD","FreeBSD
+        (FreshPorts)","Freedesktop SDK","FreshPorts","FZUG","Gentoo","Guix","hackpost","Haiku","Homebrew","Homebrew
+        Cask","IPFire","itachi_re","IUS","jultager","KaOS","Kylin-Linux-Advanced-Serve","LibreELEC","libreoffice","MacOS","MacPorts","Mageia","Manjaro
+        Linux","Meson WrapDB","NetBSD","NethServer","NixOS","Nobara","obs.infoserver.lv","OpenBSD","OpenEmbedded","openEuler","openKylin","OpenMandriva","OpenMesh","OpenProject","openSUSE","openSUSE:GNOME:Next","openSUSE
+        Leap","openSUSE Slowroll","openSUSE Tumbleweed","OpenWrt","OSX","oVirt","Parrot
+        OS","Parrot OS ","Pentoo","pkgsrc","PLD-Linux","poky","postmarketOS","Raspbian","RedHat","RHEL","Rocky
+        Linux","RPM Fusion","RPM Sphere","ruby-ox","RussianFedora","Selinux","SlackBuilds","Solaris","Solus","Spack","stagex","Sudachi
+        emulator","test","test2","Timesys","Tiny Core Linux","Ubuntu","Ultramarine
+        Linux","UnitedRPMs","Vanilla OS","Void","Windows","Wolfi","yiffOS"],"total":116}
+
+'
+  recorded_at: Tue, 24 Feb 2026 09:27:21 GMT
 recorded_with: VCR 6.4.0

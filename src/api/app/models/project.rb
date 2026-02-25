@@ -117,6 +117,9 @@ class Project < ApplicationRecord
   validate :valid_name
   validates :anitya_distribution_name, length: { maximum: 200 }
   validates :kind, inclusion: { in: TYPES }
+  validates :anitya_distribution_name,
+            inclusion: { in: ->(_project) { Project.values_for_anitya_distributions }, message: '%{value} is not a valid Anitya distribution' },
+            allow_blank: true
 
   class << self
     def home?(name)
@@ -380,6 +383,22 @@ class Project < ApplicationRecord
     def very_important_projects_with_categories
       ProjectsWithVeryImportantAttributeFinder.new.call.map do |p|
         [p.name, p.title, p.categories]
+      end
+    end
+
+    def values_for_anitya_distributions
+      distributions = Rails.cache.read('anitya_distributions')
+      return distributions[:names] if distributions.present? && distributions[:created_at] > 12.hours.ago
+
+      url = URI('https://release-monitoring.org/api/distro/names')
+      begin
+        response = Net::HTTP.get(url)
+        results = JSON.parse(response)['distro'].sort
+        Rails.cache.write('anitya_distributions', { names: results, created_at: Time.current })
+
+        results
+      rescue StandardError
+        distributions.present? ? distributions[:names] : []
       end
     end
     # class_methods
