@@ -6,7 +6,7 @@ module Webui::NotificationHelper
 
   NOTIFICATION_ICON = {
     'BsRequest' => 'fa-code-pull-request', 'Comment' => 'fa-comments',
-    'Package' => 'fa-xmark text-danger',
+    'Package' => 'fa-archive',
     'Report' => 'fa-flag', 'Decision' => 'fa-clipboard-check',
     'Appeal' => 'fa-hand', 'WorkflowRun' => 'fa-book-open',
     'Group' => 'fa-people-group'
@@ -30,8 +30,8 @@ module Webui::NotificationHelper
   def notification_icon(notification)
     if notification.event_type.in?(['Event::RelationshipCreate', 'Event::RelationshipDelete'])
       tag.i(class: %w[fas fa-user-tag], title: 'Relationship notification')
-    elsif notification.event_type.in?(['Event::UpstreamPackageVersionChanged'])
-      tag.i(class: %w[fas fa-archive])
+    elsif notification.event_type.in?(['Event::BuildFail'])
+      tag.i(class: %w[fas fa-xmark text-danger])
     elsif NOTIFICATION_ICON[notification.notifiable_type].present?
       tag.i(class: ['fas', NOTIFICATION_ICON[notification.notifiable_type]], title: NOTIFICATION_TITLE[notification.notifiable_type])
     end
