@@ -61,6 +61,8 @@ class SourceProjectController < SourceController
         render_project_issues
       when 'info'
         pass_to_backend
+      when 'versions'
+        render_project_versions
       else
         raise InvalidParameterError, "'#{params[:view]}' is not a valid 'view' parameter value."
       end
@@ -73,6 +75,11 @@ class SourceProjectController < SourceController
   def render_project_issues
     set_issues_defaults
     render partial: 'source/project_issues', formats: [:xml]
+  end
+
+  def render_project_versions
+    @packages = @project.packages.includes(:latest_local_version, :latest_upstream_version).select(:id, :name)
+    render partial: 'source/project_versions', formats: [:xml]
   end
 
   def render_project_packages
