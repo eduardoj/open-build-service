@@ -37,9 +37,9 @@ OBSApi::Application.configure do
 
   # Use memcache for cache/session storage
   config.cache_store = if CONFIG['memcached_host']
-                         [:mem_cache_store, CONFIG['memcached_host']]
+                         [:mem_cache_store, CONFIG['memcached_host'], { protocol: :meta }]
                        else
-                         :mem_cache_store
+                         [:mem_cache_store, { protocol: :meta }]
                        end
   config.session_store :cache_store
 
