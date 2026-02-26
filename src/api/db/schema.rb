@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_19_163000) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_26_144818) do
   create_table "active_storage_attachments", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -956,6 +956,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_19_163000) do
     t.string "report_bug_url", limit: 8192
     t.string "anitya_distribution_name"
     t.integer "comments_count", default: 0, null: false
+    t.datetime "anitya_distribution_synced_at"
     t.index ["comments_count"], name: "index_projects_on_comments_count"
     t.index ["develproject_id"], name: "devel_project_id_index"
     t.index ["name"], name: "projects_name_index", unique: true
