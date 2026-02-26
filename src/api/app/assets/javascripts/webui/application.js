@@ -69,3 +69,4 @@
 //= require webui/dropdown.js
 //= require webui/after_loading_fixes.js
 //= require webui/banners.js
+//= require webui/search_shortcut.js
