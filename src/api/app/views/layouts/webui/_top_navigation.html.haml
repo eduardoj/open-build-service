@@ -2,7 +2,7 @@
   .container-fluid.d-flex.flex-nowrap.justify-content-between.w-100
     = link_to(root_path, class: 'navbar-brand', alt: 'Logo') do
       = image_tag(::Configuration.logo.attached? ? ::Configuration.logo : 'obs-logo_small.svg')
-    .d-flex.nav
+    .d-flex.flex-grow-1.justify-content-end.nav
       = render partial: 'layouts/webui/top_navigation_search'
       - if User.session
         .toggler.text-center.justify-content-center.nav-item
