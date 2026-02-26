@@ -2,14 +2,15 @@ class Webui::Users::NotificationsController < Webui::WebuiController
   include Webui::NotificationsFilter
 
   ALLOWED_FILTERS = %w[all comments requests incoming_requests outgoing_requests relationships_created relationships_deleted build_failures
-                       reports reviews workflow_runs appealed_decisions member_on_groups].freeze
+                       reports reviews workflow_runs appealed_decisions member_on_groups upstream_package_version_changed].freeze
   ALLOWED_STATES = %w[all unread read].freeze
   ALLOWED_REPORT_FILTERS = %w[with_decision without_decision reportable_type].freeze
 
   EVENT_TYPES_KEY_MAP = {
     'relationships_created' => 'Event::RelationshipCreate',
     'relationships_deleted' => 'Event::RelationshipDelete',
-    'build_failures' => 'Event::BuildFail'
+    'build_failures' => 'Event::BuildFail',
+    'upstream_package_version_changed' => 'Event::UpstreamPackageVersionChanged'
   }.freeze
 
   NOTIFICATION_TYPES_KEY_MAP = {

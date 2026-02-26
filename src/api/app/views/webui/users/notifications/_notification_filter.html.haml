@@ -77,6 +77,14 @@
                                     key: 'kind[member_on_groups]', name: 'kind[]', value: 'member_on_groups',
                                     label_icon: 'fas fa-people-group',
                                     checked: selected_filter[:kind]&.include?('member_on_groups') }
+        - if Flipper.enabled?(:package_version_tracking, User.session)
+          - updates_frame_path = count_for_event_types_my_notifications_path(event_type: 'upstream_package_version_changed')
+          = render partial: 'check_box',
+                            locals: { label: 'Version Updates',
+                                      turbo_frame_path: updates_frame_path,
+                                      key: 'kind[upstream_package_version_changed]', name: 'kind[]', value: 'upstream_package_version_changed',
+                                      label_icon: 'fas fa-arrow-up',
+                                      checked: selected_filter[:kind]&.include?('upstream_package_version_changed') }
 
     - if policy(Report.new).notify?
       .mt-2.mb-2.accordion-item.border-0.auto-submit-on-change

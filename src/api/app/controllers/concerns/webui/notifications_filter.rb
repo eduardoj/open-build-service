@@ -19,6 +19,7 @@ module Webui::NotificationsFilter
     relations_kind << notifications.for_workflow_runs if filter_kind.include?('workflow_runs')
     relations_kind << notifications.for_appealed_decisions if filter_kind.include?('appealed_decisions')
     relations_kind << notifications.for_member_on_groups if filter_kind.include?('member_on_groups')
+    relations_kind << notifications.for_upstream_package_version_changed if filter_kind.include?('upstream_package_version_changed')
 
     notifications = notifications.merge(relations_kind.inject(:or)) unless relations_kind.empty?
     notifications
