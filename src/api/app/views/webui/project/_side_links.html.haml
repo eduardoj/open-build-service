@@ -45,6 +45,16 @@
       = link_to(project_show_path(project_maintenance_project)) do
         = project_maintenance_project
 
+  - if Flipper.enabled?(:package_version_tracking, User.session) && project.anitya_distribution_name.present?
+    %li
+      %i.fas.fa-sync-alt.text-info
+      - if project.anitya_distribution_synced_at.present?
+        Anitya distribution info last synced
+        = time_ago_in_words(project.anitya_distribution_synced_at)
+        ago
+      - else
+        Anitya distribution info not synced yet
+
   - if project.locked?
     %li
       %i.fa.fa-lock
