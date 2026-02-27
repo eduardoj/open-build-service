@@ -2,6 +2,7 @@ RSpec.describe SyncUpstreamPackageVersionJob, :vcr do
   describe '#perform' do
     let!(:project) { create(:project_with_package, name: 'factory', package_name: 'hello') }
     let(:package) { project.packages.first }
+    let(:sync_time) { Time.zone.parse('2026-02-27 10:00:00') }
 
     before do
       # The project should exist in the Backend before we set anitya_distribution_name
@@ -12,12 +13,18 @@ RSpec.describe SyncUpstreamPackageVersionJob, :vcr do
     context 'when the package is available upstream' do
       context 'providing a project name' do
         before do
-          described_class.perform_now(project_name: project.name)
+          travel_to sync_time do
+            described_class.perform_now(project_name: project.name)
+          end
         end
 
         it 'creates a package version upstream record for the projects packages' do
           expect(PackageVersionUpstream.count).to eq(1)
           expect(package.package_versions.first).to have_attributes(version: '2.12.2', type: 'PackageVersionUpstream')
+        end
+
+        it 'updates the anitya distribution synced at column on the project' do
+          expect(project.reload.anitya_distribution_synced_at).to eq(sync_time)
         end
       end
 
@@ -28,11 +35,17 @@ RSpec.describe SyncUpstreamPackageVersionJob, :vcr do
         before do
           # The project should exist in the Backend before we set anitya_distribution_name (what triggers the fetching jobs)
           another_project.update(anitya_distribution_name: 'openSUSE')
-          described_class.perform_now
+          travel_to sync_time do
+            described_class.perform_now
+          end
         end
 
         it 'creates a package version upstream record for all projects packages with the attribute assigned' do
-          expect(PackageVersionUpstream.all).to contain_exactly(have_attributes(version: '0.27.1', type: 'PackageVersionUpstream'), have_attributes(version: '2.12.2', type: 'PackageVersionUpstream'))
+          expect(PackageVersionUpstream.all).to contain_exactly(have_attributes(version: '0.28.0', type: 'PackageVersionUpstream'), have_attributes(version: '2.12.2', type: 'PackageVersionUpstream'))
+        end
+
+        it 'updates the anitya distribution synced at column on the project' do
+          expect(project.reload.anitya_distribution_synced_at).to eq(sync_time)
         end
       end
     end
@@ -50,6 +63,10 @@ RSpec.describe SyncUpstreamPackageVersionJob, :vcr do
       context 'not providing a project name' do
         it 'removes the existing upstream versions' do
           expect { described_class.perform_now }.to change(PackageVersionUpstream, :count).from(1).to(0)
+        end
+
+        it 'does not update the anitya distribution synced at column on the project' do
+          expect { described_class.perform_now }.not_to change(project, :anitya_distribution_synced_at)
         end
       end
     end
